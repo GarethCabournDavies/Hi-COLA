@@ -26,6 +26,7 @@ class GravityModelmbeta : public GravityModel<NDIM> {
     FML::INTERPOLATION::SPLINE::Spline phi_over_Mpl_of_a_spline;
 
   public:
+    double GG4_GN([[maybe_unused]] double a) const override { return 1.0; }
     template <int N>
     using FFTWGrid = FML::GRID::FFTWGrid<N>;
     using ParameterMap = FML::UTILS::ParameterMap;

@@ -75,6 +75,7 @@ class GravityModelJBD : public GravityModel<NDIM> {
       double G_over_Gdensityparams = jbd->get_G_over_Gdensityparams();
       return G_over_Gdensityparams * phi_star / jbd->phi_of_a(a);
     }
+    double GG4_GN([[maybe_unused]] double a) const override { return 1.0; }
 
     //========================================================================
     // Read parameters
