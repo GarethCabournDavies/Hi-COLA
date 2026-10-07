@@ -74,6 +74,7 @@ class GravityModelDGP final : public GravityModel<NDIM> {
     double GeffOverG(double a, [[maybe_unused]] double koverH0 = 0.0) const override {
         return 1.0 + 1.0 / (3.0 * get_beta_dgp(a));
     }
+    double GG4_GN([[maybe_unused]] double a) const override { return 1.0; }
 
     //========================================================================
     // For the LPT equations there is a modified >= 2LPT factor
@@ -83,7 +84,7 @@ class GravityModelDGP final : public GravityModel<NDIM> {
         // The base-class contains how to deal with massive neutrinos so we multiply this in
         // to avoid having to also implement it here
         return GravityModel<NDIM>::source_factor_2LPT(a, koverH0) *
-               (1.0 - (2.0 * rcH0_DGP * rcH0_DGP * this->cosmo->get_OmegaM()) /
+               (1.0 - (2.0 * rcH0_DGP * rcH0_DGP * this->cosmo->get_OmegaM0()) /
                           (9.0 * a * a * a * (betadgp * betadgp * betadgp) * (1 + 1.0 / (3.0 * betadgp))));
     }
 
@@ -100,7 +101,7 @@ class GravityModelDGP final : public GravityModel<NDIM> {
                        std::array<FFTWGrid<NDIM>, NDIM> & force_real) const override {
 
         // Compute fifth-force
-        const double norm_poisson_equation = 1.5 * this->cosmo->get_OmegaM() * a;
+        const double norm_poisson_equation = 1.5 * this->cosmo->get_OmegaM0() * a;
         auto coupling = [&]([[maybe_unused]] double kBox) { return GeffOverG(a, kBox / H0Box) - 1.0; };
         FFTWGrid<NDIM> density_fifth_force;
 
@@ -115,7 +116,7 @@ class GravityModelDGP final : public GravityModel<NDIM> {
               
               // Set up the solver, set the settings, and solve the solution
               const bool verbose = true;
-              DGPSolverCosmology<NDIM, double> mgsolver(this->cosmo->get_OmegaM(), rcH0_DGP, get_beta_dgp(a), H0Box, verbose);
+              DGPSolverCosmology<NDIM, double> mgsolver(this->cosmo->get_OmegaM0(), rcH0_DGP, get_beta_dgp(a), H0Box, verbose);
               mgsolver.set_ngs_steps(multigrid_nsweeps, multigrid_nsweeps, multigrid_nsweeps_first_step);
               mgsolver.set_epsilon(multigrid_solver_residual_convergence);
               mgsolver.solve(a, density_real, density_fifth_force);
@@ -149,7 +150,7 @@ class GravityModelDGP final : public GravityModel<NDIM> {
         } else if (use_screening_method) {
 
             // Approximate screening method
-            const double OmegaM = this->cosmo->get_OmegaM();
+            const double OmegaM = this->cosmo->get_OmegaM0();
             auto screening_function_dgp = [=](double density_contrast) {
                 double fac = 8.0 * OmegaM * std::pow(rcH0_DGP * (GeffOverG(a) - 1.0), 2) * (density_contrast);
                 fac *= screening_efficiency;

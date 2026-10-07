@@ -17,6 +17,9 @@
 #include <FML/RandomFields/GaussianRandomField.h>
 #include <FML/RandomFields/NonLocalGaussianRandomField.h>
 #include <FML/Timing/Timings.h>
+#include <complex>
+#include <iostream>
+#include <string>
 
 namespace FML {
 
@@ -1209,6 +1212,133 @@ namespace FML {
                 }
             }
         }
+        
+        //===================================================================================
+        /// @brief This method computes the fifth-force potential for modified gravity models which has a screening
+        /// mechanism using the approximate method of Winther & Ferreira 2015. This computes \f$ \delta_{\rm MG}(k) \f$
+        /// where the total force in fourier is given by \f$ F(k) \propto \frac{\vec{k}}{k^2}[\delta(k) + \delta_{\rm
+        /// MG}(k)] \f$ by solving \f$ \nabla^2 \phi = m^2 \phi + f(\Phi)F^{-1}[g(k) \delta(k)] \f$ where \f$
+        /// \delta_{\rm MG}(k) = -k^2\phi(k) \f$ For example in \f$ f(R) \f$ gravity we have \f$ g(k) =
+        /// \frac{1}{3}\frac{k^2}{k^2 + m^2} \f$ and the screening function is \f$ f(\Phi) = \min(1,
+        /// \left|\frac{3f_R}{2\Phi}\right|) \f$ If you don't want screening then simpy pass the function \f$ f \equiv 1
+        /// \f$ and the equation reduces to the one in the linear regime
+        ///
+        /// @tparam N The dimension we work in.
+        ///
+        /// @param[in] density_fourier The density contrast in fourier space.
+        /// @param[out] density_mg_fourier The force potential.
+        /// @param[in] coupling_factor_of_kBox The coupling factor \f$g(k)\f$
+        /// @param[in] screening_factor_of_newtonian_potential The screening factor \f$ f(\Phi_N) \f$ Should be in
+        /// \f$ [0,1] \f$ and go to 1 for \f$ \Phi_N \to 0 \f$ and 0 for very large \f$ \Phi_N \f$
+        /// @param[in] poisson_norm The factor \f$ C \f$ in \f$ \nabla^2\Phi = C\delta \f$ to get the potential in the
+        /// metric (not the code-potential) so \f$ C = \frac{3}{2}\Omega_M a \frac{(H_0B)^2}{a^2} \f$
+        ///
+        //===================================================================================
+        template <int N>
+        void compute_delta_fifth_force_gradient_screening(
+            const FFTWGrid<N> & density_fourier,
+            FFTWGrid<N> & density_mg_fourier,
+            std::function<double(double)> coupling_factor_of_kBox,
+            std::function<double(double)> screening_factor_of_newtonian_potential,
+            double poisson_norm,
+            double smoothing_scale,
+            std::string smoothing_method) {
+
+            const auto Local_nx = density_fourier.get_local_nx();
+            const auto Local_x_start = density_fourier.get_local_x_start();
+
+            // Make copy of density grid
+            density_mg_fourier = density_fourier;
+
+            auto phi_x = density_fourier;
+            auto phi_y = density_fourier;
+            auto phi_z = density_fourier;
+            // Transform to Newtonian potential
+#ifdef USE_OMP
+#pragma omp parallel for
+#endif
+            for (int islice = 0; islice < Local_nx; islice++) {
+                [[maybe_unused]] double kmag2;
+                [[maybe_unused]] std::array<double, N> kvec;
+                std::complex<FML::GRID::FloatType> I(0, 1);
+                for (auto && fourier_index : density_mg_fourier.get_fourier_range(islice, islice + 1)) {
+                    auto value = density_mg_fourier.get_fourier_from_index(fourier_index);
+                    density_mg_fourier.get_fourier_wavevector_and_norm2_by_index(fourier_index, kvec, kmag2);
+
+                    auto value_x = -value * poisson_norm/kmag2 * I * kvec[0];
+                    phi_x.set_fourier_from_index(fourier_index, value_x);
+                    auto value_y = -value * poisson_norm/kmag2 * I * kvec[1];
+                    phi_y.set_fourier_from_index(fourier_index, value_y);
+                    auto value_z = -value * poisson_norm/kmag2 * I * kvec[2];
+                    phi_z.set_fourier_from_index(fourier_index, value_z);
+
+                    // auto value = density_mg_fourier.get_fourier_from_index(fourier_index);
+                    
+                    //value *= -poisson_norm / kmag2; //want this to be gradient of newtonian potential
+		            //value *= -1.*I*poisson_norm/std::pow(kmag2,0.5);
+                    //density_mg_fourier.set_fourier_from_index(fourier_index, value);
+                }
+            }
+
+            // Set DC mode
+            if (Local_x_start == 0){
+                density_mg_fourier.set_fourier_from_index(0, 0.0);
+                phi_x.set_fourier_from_index(0, 0.0);
+                phi_y.set_fourier_from_index(0, 0.0);
+                phi_z.set_fourier_from_index(0, 0.0);}
+
+            // Take another copy of the density field as we need it in real space
+            auto delta_real = density_fourier;
+
+            // Transform to real space: Phi(x) and delta(x)
+            density_mg_fourier.fftw_c2r();
+            phi_x.fftw_c2r();
+            phi_y.fftw_c2r();
+            phi_z.fftw_c2r();
+            delta_real.fftw_c2r();
+
+            // Apply screening function
+#ifdef USE_OMP
+#pragma omp parallel for
+#endif
+            for (int islice = 0; islice < Local_nx; islice++) {
+                for (auto && real_index : density_mg_fourier.get_real_range(islice, islice + 1)) {
+                    auto grad_phi_newton_x = phi_x.get_real_from_index(real_index); //we want gradient of this | setting 1247 correctly makes this gradient?
+                    auto grad_phi_newton_y = phi_y.get_real_from_index(real_index);
+                    auto grad_phi_newton_z = phi_z.get_real_from_index(real_index);
+                    auto mod_grad_newton = std::sqrt(grad_phi_newton_x*grad_phi_newton_x+grad_phi_newton_y*grad_phi_newton_y+grad_phi_newton_z*grad_phi_newton_z);
+                    std::cout << "[DEBUG] Value of abs(grad[phi]) = " << mod_grad_newton << std::endl;
+                    auto delta = delta_real.get_real_from_index(real_index);
+                    auto screening_factor = screening_factor_of_newtonian_potential(mod_grad_newton); //feed gradient of phi_newton here
+                    density_mg_fourier.set_real_from_index(real_index, delta * screening_factor);
+                }
+            }
+
+            // Back to fourier space: delta(k)
+            density_mg_fourier.fftw_r2c();
+
+            // Apply coupling
+#ifdef USE_OMP
+#pragma omp parallel for
+#endif
+            for (int islice = 0; islice < Local_nx; islice++) {
+                [[maybe_unused]] double kmag;
+                [[maybe_unused]] std::array<double, N> kvec;
+                for (auto && fourier_index : density_mg_fourier.get_fourier_range(islice, islice + 1)) {
+                    auto value = density_mg_fourier.get_fourier_from_index(fourier_index);
+
+                    // Get wavevector and magnitude
+                    density_mg_fourier.get_fourier_wavevector_and_norm_by_index(fourier_index, kvec, kmag);
+
+                    // Compute coupling
+                    auto coupling = coupling_factor_of_kBox(kmag);
+
+                    // Multiply by coupling
+                    density_mg_fourier.set_fourier_from_index(fourier_index, value * FML::GRID::FloatType(coupling));
+                }
+            }
+        }
+
 
         //===================================================================================
         /// @brief This method computes the fifth-force potential for modified gravity models which has a screening

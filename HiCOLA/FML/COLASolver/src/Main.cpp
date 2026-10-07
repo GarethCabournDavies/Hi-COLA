@@ -29,6 +29,7 @@
 #include "GravityModel_mbeta.h"
 #include "GravityModel_symmetron.h"
 #include "GravityModel_HiCOLA.h"
+#include "GravityModel_kmouflage.h"
 
 #include "Simulation.h"
 
@@ -166,10 +167,15 @@ int main(int argc, char ** argv) {
         grav = std::make_shared<GravityModelHiCOLA<NDIM>>(cosmo);
     else if (gravity_model == "mbeta")
         grav = std::make_shared<GravityModelmbeta<NDIM>>(cosmo);
+    else if (gravity_model == "kmouflage")
+        grav = std::make_shared<GravityModelkmouflage<NDIM>>(cosmo);
     else
         throw std::runtime_error("Unknown gravitymodel [" + gravity_model + "]");
     grav->read_parameters(param);
    if (gravity_model == "HiCOLA") {
+        grav->read_and_spline_chi_over_delta_chi();
+    }
+   if (gravity_model == "kmouflage") {
         grav->read_and_spline_chi_over_delta_chi();
     }
     grav->init();
