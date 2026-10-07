@@ -178,9 +178,9 @@ def fried_RHS_wrapper(cl_variable, cl_declaration, fried_RHS_lambda, E, phi, phi
         if cl_declaration[1] == 2:
             return fried_RHS_lambda(E, phi, cl_variable, Omega_r,Omega_m,Omega_l,*parameters) #Closure used to compute phi_prime0
         if cl_declaration[1] == 3:
-            return fried_RHS_lambda(E,phi_prime,cl_variable,Omega_m,Omega_l,*parameters) #Closure used to compute Omega_r0
+            return fried_RHS_lambda(E,phi,phi_prime,cl_variable,Omega_m,Omega_l,*parameters) #Closure used to compute Omega_r0
         if cl_declaration[1] == 4:
-            return fried_RHS_lambda(E,phi_prime,Omega_r,cl_variable,Omega_l,*parameters) #Closure used to compute Omega_m0
+            return fried_RHS_lambda(E,phi,phi_prime,Omega_r,cl_variable,Omega_l,*parameters) #Closure used to compute Omega_m0
         # if cl_declaration[1] == 5:
         #     return fried_RHS_lambda(E,phi,phi_prime,Omega_r,Omega_m,cl_variable,*parameters) #Closure used to compute Omega_l0
     if cl_declaration[0] == 'parameters':

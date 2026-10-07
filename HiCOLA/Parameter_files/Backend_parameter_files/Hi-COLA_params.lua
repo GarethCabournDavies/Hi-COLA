@@ -1,4 +1,3 @@
-<<<<<<< HEAD:HiCOLA/Parameter_files/Backend_parameter_files/Hi-COLA_params.lua
 ------------------------------------------------------------
 -- Simulation parameter file
 -- This is a LUA script so you can write simple code

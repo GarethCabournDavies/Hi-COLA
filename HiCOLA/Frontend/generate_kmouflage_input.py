@@ -71,7 +71,7 @@ print('phiprime0 is '+str(phi_prime0))
 #---Create Horndeski functions---
 ###################COMMENT/UNCOMMENT
 lambdified_functions = eb.create_Horndeski(K,G3,G4,symbol_list,mass_ratio_list)
-lambdified_kmou = eb.create_kmouflage(G4, symbol_list, mass_ratio_list)
+lambdified_kmou = eb.create_kmouflage(G4, K, symbol_list, mass_ratio_list)
 read_out_dict.update(lambdified_functions)
 read_out_dict.update(lambdified_kmou)
 ######################################
