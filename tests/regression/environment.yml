@@ -1,0 +1,17 @@
+name: hicola-regression
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - scipy
+  - sympy
+  - matplotlib
+  - configobj
+  - pandas
+  - fftw=*=mpi_openmpi*
+  - openmpi
+  - gsl
+  - lua=5.4
+  - make
+  - cxx-compiler

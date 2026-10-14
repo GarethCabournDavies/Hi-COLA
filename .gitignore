@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+regression-results/
+/HiCOLA/FML/COLASolver/*.o
+/HiCOLA/FML/COLASolver/nbody
+/HiCOLA/FML/COLASolver/force_probe
