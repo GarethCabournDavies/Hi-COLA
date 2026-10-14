@@ -40,8 +40,10 @@ class SupportTests(unittest.TestCase):
                 path = Path(directory)/'table.txt'
                 fn(*columns,path)
                 np.testing.assert_allclose(np.loadtxt(path),np.array(columns).T[::-1],rtol=5e-5)
-            s.write_data_flex(columns,path)
-            np.testing.assert_allclose(np.loadtxt(path),np.array(columns).T[::-1],rtol=5e-5)
+            flex_columns = [[.123456, 1.234567], [2.345678, 3.456789]]
+            flex_path = Path(directory)/'flex_table.txt'
+            s.write_data_flex(flex_columns,flex_path)
+            np.testing.assert_allclose(np.loadtxt(flex_path),np.array(flex_columns).T[::-1],rtol=5e-5)
 
     def test_output_missing_directory(self):
         with tempfile.TemporaryDirectory() as directory:
