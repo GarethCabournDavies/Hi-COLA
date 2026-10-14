@@ -1,23 +1,60 @@
 # Hi-COLA
 
-<p align="left">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="Hi-COLA-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="Hi-COLA-light.png">
-    <img alt="Hi-COLA logo" src="Hi-COLA-light.png" width="120">
-  </picture>
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logos/Hi-COLA-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/logos/Hi-COLA-light.png">
+  <img alt="Hi-COLA logo" src="assets/logos/Hi-COLA-light.png" width="160">
+</picture>
 
-Hi-COLA is a package that runs fast, approximate N-body simulations of non-linear structure formation in reduced Horndeski gravity (Horndeski theories with luminal gravitational waves). 
+**Fast, approximate N-body simulations of structure formation in reduced Horndeski gravity.**
 
-Hi-COLA is not hard-coded to solve specific Horndeski theories, but is designed to be generic with respect to the reduced Horndeski class. Given an input Lagrangian, Hi-COLA's frontend dynamically constructs the appropriate field equations and consistently solves for the cosmological background, linear growth, and screened fifth force of that theory. This is passed to the backend, an adaptation of the FML library, where a hybrid N-body simulation at significantly reduced computational and temporal cost compared to traditional N-body codes is run. By analysing the particle snapshots, one is able to study the formation of structure through statistics like the matter power spectrum.
+[User manual](Documentation/Hi-COLA_User_manual.pdf) · [Quickstart](Documentation/Hi-COLA_Quickstart_guide.pdf) · [Contributing](CONTRIBUTING.md)
 
-See the Documentation folder for guidance on how to install and use Hi-COLA. There you will find both a quickstart guide and a more detailed user manual.
+[![Cite Hi-COLA](https://img.shields.io/badge/Cite-Hi--COLA-blue)](CITATION.md)
 
-Also see [our paper introducing Hi-COLA](https://iopscience.iop.org/article/10.1088/1475-7516/2023/03/040) [(pre-print version)](https://arxiv.org/abs/2209.01666), where we detail the work gone into creating the first version of Hi-COLA. We encourage the community to use Hi-COLA for their own research, and request that you cite us as detailed in the user manual (a handy bibtex is also provided there). Hi-COLA is provided under a [CC BY 4.0 licence](https://creativecommons.org/licenses/by/4.0/).
+Hi-COLA takes an input Lagrangian and constructs the field equations for reduced Horndeski theories with luminal gravitational waves. Its Python frontend solves the cosmological background, linear growth, and screened fifth force, then exports tables for a C++ backend adapted from the FML library. The backend evolves particles using the COLA approximation, allowing researchers to study non-linear structure formation at reduced computational cost.
 
-Hi-COLA is set up to natively operate with Vainshtein screening. However, with a few specific settings, K-mouflage models can also be simulated -- see our [paper on K-mouflage in Hi-COLA](https://iopscience.iop.org/article/10.1088/1475-7516/2024/11/052) ([pre-print here](https://arxiv.org/abs/2407.00855)). 
+## Capabilities
 
-How does the accuracy of Hi-COLA fare relative to other approximate tools for LSS? You can find a detailed comparison exercise [in this paper](https://academic.oup.com/mnras/article/536/1/664/7903359?login=true) ([pre-print version here](https://arxiv.org/abs/2406.13667)). 
+- Construct model equations from user-supplied Horndeski functions.
+- Generate consistent background and fifth-force tables.
+- Run approximate N-body simulations with Vainshtein screening; K-mouflage models require the settings described in the associated paper and documentation.
+- Analyse particle snapshots and matter power spectra.
 
-Hi-COLA remains under active development. You can contact the Hi-COLA team at team.hicola@gmail.com, or at our individual emails (see papers linked above).
+Hi-COLA is an approximate simulation tool. Accuracy depends on the model, scale, and simulation settings; consult the validation papers below before choosing a research configuration.
+
+## Get started
+
+From a repository checkout, install the Python frontend in an isolated environment:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e .
+```
+
+Generate input tables for a supplied cubic Galileon model:
+
+```sh
+MPLBACKEND=Agg python -m HiCOLA.Frontend.generate_simulation_input \
+  HiCOLA/Parameter_files/Frontend_parameter_files/examples/cubic_Galileon/cuGal_f0p2.ini \
+  HiCOLA/Parameter_files/Frontend_parameter_files/examples/WMAP_cosmological_parameters.ini
+```
+
+This writes expansion and fifth-force tables to `Hi-COLA_Output/`. Follow the [quickstart guide](Documentation/Hi-COLA_Quickstart_guide.pdf) and [user manual](Documentation/Hi-COLA_User_manual.pdf) to configure, build, and run the C++ simulator. The backend requires separate compiler and library dependencies; installing the Python package does not build it.
+
+The [quickstart guide](Documentation/Hi-COLA_Quickstart_guide.pdf) and [user manual](Documentation/Hi-COLA_User_manual.pdf) describe the workflow and scientific background.
+
+## Scientific references and citation
+
+Please cite the [Hi-COLA introduction paper](https://doi.org/10.1088/1475-7516/2023/03/040) when using the code. The [citation guide](CITATION.md) includes BibTeX, model-specific references, and guidance for recording the software revision. Machine-readable citation metadata is available in [CITATION.cff](CITATION.cff).
+
+- **Method and initial validation:** [Hi-COLA: Fast, approximate simulations of structure formation in Horndeski gravity](https://arxiv.org/abs/2209.01666).
+- **K-mouflage extension:** [K-mouflage at high k: extending the reach of Hi-COLA](https://arxiv.org/abs/2407.00855).
+- **Comparison with other methods:** [Matter Power Spectra in Modified Gravity: A Comparative Study of Approximations and N-Body Simulations](https://arxiv.org/abs/2406.13667).
+
+## Development and support
+
+Hi-COLA is under active development. See [CONTRIBUTING.md](CONTRIBUTING.md) to report a reproducible issue or propose a change. For scientific questions, contact the team at [team.hicola@gmail.com](mailto:team.hicola@gmail.com).
+
+Hi-COLA is provided under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), as stated by the project. Bundled dependencies retain their own licensing terms.

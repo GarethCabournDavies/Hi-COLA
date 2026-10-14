@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "Please cite the Hi-COLA introduction paper below. See CITATION.md for additional references and revision guidance."
+title: "Hi-COLA"
+type: software
+authors:
+  - name: "Hi-COLA team"
+repository-code: "https://github.com/Hi-COLACode/Hi-COLA"
+url: "https://github.com/Hi-COLACode/Hi-COLA"
+preferred-citation:
+  type: article
+  title: "Hi-COLA: Fast, approximate simulations of structure formation in Horndeski gravity"
+  authors:
+    - family-names: "Wright"
+      given-names: "Bill S."
+    - family-names: "Sen Gupta"
+      given-names: "Ashim"
+    - family-names: "Baker"
+      given-names: "Tessa"
+    - family-names: "Valogiannis"
+      given-names: "Georgios"
+    - family-names: "Fiorini"
+      given-names: "Bartolomeo"
+  journal: "Journal of Cosmology and Astroparticle Physics"
+  year: 2023
+  volume: "2023"
+  issue: "03"
+  start: "040"
+  doi: "10.1088/1475-7516/2023/03/040"

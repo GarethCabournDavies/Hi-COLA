@@ -1,5 +1,4 @@
-from setuptools import setup, find_packages
-setup(
-    name = 'Hi-COLA',
-    packages = find_packages(),
-)
+"""Compatibility entry point; package metadata lives in pyproject.toml."""
+from setuptools import setup
+
+setup()

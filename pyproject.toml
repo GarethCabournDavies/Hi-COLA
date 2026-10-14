@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Hi-COLA"
+version = "0.0.dev0"
+description = "Fast, approximate N-body simulations of structure formation in reduced Horndeski gravity"
+readme = "README.md"
+authors = [{name = "Hi-COLA team", email = "team.hicola@gmail.com"}]
+dependencies = ["numpy", "scipy", "sympy", "matplotlib", "configobj"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: C++",
+]
+
+[project.urls]
+Homepage = "https://github.com/Hi-COLACode/Hi-COLA"
+Documentation = "https://github.com/Hi-COLACode/Hi-COLA/blob/Hi-COLA_public/Documentation/Hi-COLA_User_manual.pdf"
+Source = "https://github.com/Hi-COLACode/Hi-COLA"
+Issues = "https://github.com/Hi-COLACode/Hi-COLA/issues"
+
+[tool.setuptools.packages.find]
+include = ["HiCOLA", "HiCOLA.*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+HiCOLA = ["Parameter_files/**/*.ini", "Parameter_files/**/*.lua", "Parameter_files/**/*.dat"]
