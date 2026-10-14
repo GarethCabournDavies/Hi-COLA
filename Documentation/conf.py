@@ -1,10 +1,12 @@
 """Build guides and API reference from the checked-out Hi-COLA source."""
 import ast
 import os
+import re
 from pathlib import Path
 import sys
 
-ROOT = Path(__file__).resolve().parents[1]
+# Multiversion runs Sphinx from each version checkout with a shared configuration.
+ROOT = Path.cwd() if (Path.cwd() / "HiCOLA").is_dir() else Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 project = "Hi-COLA"
 author = "Hi-COLA team"
@@ -12,7 +14,7 @@ release = os.environ.get("DOCS_VERSION", "latest")
 version = release
 extensions = [
     "myst_parser", "sphinx.ext.autodoc", "sphinx.ext.autosummary",
-    "sphinx.ext.napoleon", "sphinx.ext.mathjax", "sphinx.ext.githubpages",
+    "sphinx.ext.napoleon", "sphinx.ext.mathjax", "sphinx_multiversion",
 ]
 root_doc = "index"
 exclude_patterns = ["_build", "README.md", "FML-dependency-audit.md"]
@@ -21,16 +23,15 @@ autodoc_typehints = "description"
 napoleon_numpy_docstring = True
 myst_enable_extensions = ["dollarmath", "colon_fence"]
 html_theme = "pydata_sphinx_theme"
-site_url = os.environ.get("DOCS_SITE_URL", "").rstrip("/")
-html_theme_options = {
-    "navbar_start": ["navbar-logo", "version-switcher"],
-    "switcher": {
-        "json_url": f"{site_url}/versions.json" if site_url else "../versions.json",
-        "version_match": release,
-    },
-    # The shared manifest is created during publication, after this build.
-    "check_switcher": False,
-}
+templates_path = ["_templates"]
+html_theme_options = {"navbar_start": ["navbar-logo", "release-switcher"]}
+default_branch = os.environ.get("DOCS_DEFAULT_BRANCH", "Hi-COLA_public")
+smv_branch_whitelist = rf"^{re.escape(default_branch)}$"
+smv_tag_whitelist = r"^v?[0-9]+(?:\.[0-9]+)*(?:[-+][A-Za-z0-9.-]+)?$"
+smv_remote_whitelist = r"^origin$"
+smv_prefer_remote_refs = True
+smv_latest_version = default_branch
+smv_outputdir_format = "{ref.name}"
 html_static_path = []
 repository = os.environ.get("GITHUB_REPOSITORY", "GarethCabournDavies/Hi-COLA")
 source_ref = os.environ.get("DOCS_SOURCE_REF", "Hi-COLA_public")
@@ -58,4 +59,14 @@ for title, module in modules.items():
                   "   :toctree: generated", "   :nosignatures:", ""])
     lines.extend(f"   {module}.{name}" for name in names)
     lines.append("")
+(ROOT / "Documentation/api").mkdir(parents=True, exist_ok=True)
 (ROOT / "Documentation/api/index.rst").write_text("\n".join(lines))
+
+
+def setup(app):
+    def version_source_links(app, config):
+        ref = config.smv_current_version or source_ref
+        config.myst_url_schemes["repo"]["url"] = (
+            f"https://github.com/{repository}/blob/{ref}/{{{{path}}}}"
+        )
+    app.connect("config-inited", version_source_links)

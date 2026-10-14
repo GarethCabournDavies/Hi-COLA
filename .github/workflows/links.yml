@@ -10,7 +10,7 @@ permissions:
 jobs:
   local-links:
     if: github.event_name == 'pull_request' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       MPLBACKEND: Agg
@@ -22,17 +22,31 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v7
         with:
-          python-version: '3.12'
+          python-version: '3.12.14'
           cache: pip
           cache-dependency-path: |
-            requirements-docs.txt
-            requirements.txt
+            requirements-docs.lock
       - name: Install documentation dependencies
-        run: python -m pip install -r requirements-docs.txt
+        run: python -m pip install -r requirements-docs.lock
       - name: Build documentation for link tests
         run: python -m sphinx -W --keep-going -b html Documentation Documentation/_build/html
-      - name: Check local links, anchors, and assets
-        run: python -m unittest discover -s .github/scripts -p 'test_documentation_links.py' -v
+      - name: Check local links and anchors with Lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          lycheeVersion: v0.24.2
+          args: >-
+            --offline --include-fragments --no-progress --no-ignore
+            --exclude-path '(^|/)_static/' --
+            './Documentation/_build/html/**/*.html'
+          fail: true
+          failIfEmpty: true
+          output: lychee/local-report.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: local-link-report
+          path: lychee/local-report.md
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         with:
           name: documentation-html
@@ -42,7 +56,7 @@ jobs:
   external-links:
     needs: local-links
     continue-on-error: true
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
