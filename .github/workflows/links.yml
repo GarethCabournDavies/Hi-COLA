@@ -1,4 +1,4 @@
-name: Documentation links
+name: Links
 
 on:
   pull_request:
@@ -44,27 +44,28 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      MPLBACKEND: Agg
-      DOCS_SOURCE_REF: ${{ github.event.repository.default_branch }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v4
         with:
-          persist-credentials: false
-      - uses: actions/setup-python@v7
+          name: documentation-html
+          path: checked-documentation
+      - name: Check external links with Lychee
+        uses: lycheeverse/lychee-action@v2
         with:
-          python-version: '3.12'
-          cache: pip
-          cache-dependency-path: |
-            requirements-docs.txt
-            requirements.txt
-      - name: Install documentation dependencies
-        run: python -m pip install -r requirements-docs.txt
-      - name: Check external links in guides, docstrings, and code comments
-        run: python -m sphinx -W --keep-going -b linkcheck Documentation Documentation/_build/linkcheck
+          lycheeVersion: v0.24.2
+          args: >-
+            --verbose --no-progress
+            --scheme http --scheme https
+            --timeout 20 --max-retries 2 --max-concurrency 5
+            './checked-documentation/**/*.html'
+          fail: false
+          failIfEmpty: true
+          jobSummary: true
+          format: markdown
+          output: lychee/report.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: documentation-link-report
-          path: Documentation/_build/linkcheck
+          path: lychee/report.md
           if-no-files-found: warn
