@@ -58,4 +58,4 @@ For the current command-line reader, use `which_odeint_par = 1` for `phiprime0`.
 
 With `Omega_m0 = None`, matter is `(Omega_b0h2 + Omega_c0h2)/h**2`. With `Omega_r0 = None`, radiation is `Omega_r0h2/h**2`. **Keep `Omega_m0 = None` in the current reader:** its direct-matter branch mistakenly reads `Omega_r0`. Setting a direct matter value therefore does not supply that value correctly.
 
-Choose `max_redshift` to cover the backend's initial redshift and all output epochs. Validate convergence by varying resolution and numerical settings; successful integration alone does not establish physical viability or screening accuracy. For theory conventions and model derivations, consult the [user manual](Hi-COLA_User_manual.pdf).
+Choose `max_redshift` to cover the backend's initial redshift and all output epochs. Validate convergence by varying resolution and numerical settings; successful integration alone does not establish physical viability or screening accuracy. For theory conventions and model derivations, consult the [equation and normalisation reference](equations.md).

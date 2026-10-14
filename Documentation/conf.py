@@ -19,6 +19,7 @@ exclude_patterns = ["_build", "README.md", "FML-dependency-audit.md"]
 autosummary_generate = True
 autodoc_typehints = "description"
 napoleon_numpy_docstring = True
+myst_heading_anchors = 3
 myst_enable_extensions = ["dollarmath", "colon_fence"]
 html_theme = "pydata_sphinx_theme"
 templates_path = ["_templates"]

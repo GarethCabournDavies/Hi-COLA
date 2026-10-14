@@ -24,3 +24,5 @@ Existing filenames trigger renaming, so use the filenames reported by the run. B
 To customise the example, copy both INI files into a working directory, change `model_name`, `cosmo_name`, and `output_directory`, then edit model and cosmology values using the [frontend reference](frontend.md). Keep the frontend cosmology consistent with backend Lua values.
 
 The generated tables are inputs to the simulator, not particle snapshots. Continue with the [backend guide](backend.md) to configure the Lua file and run a small N-body job.
+
+For theory conventions, see [theory and code structure](theory.md) and [background equations](equations.md). For production choices, follow the [initial-condition](initial-conditions.md) and [resolution](resolution.md) guides after the small backend run succeeds.

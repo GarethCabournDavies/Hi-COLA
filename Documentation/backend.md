@@ -23,6 +23,19 @@ The initial spectrum is a separate input. For `ic_type_of_input = "powerspectrum
 
 Inspect `ic_use_gravity_model_GR` and `ic_sigma8_normalization` when comparing modified-gravity and GR runs: they affect back-scaling and normalisation. Keep seeds and initial-condition choices recorded.
 
+## Cosmology consistency and the dark-energy key
+
+For the frontend's flat, massless-neutrino setup, use `cosmology_OmegaMNu = 0.0`. The backend's `cosmology_OmegaLambda` key represents **total present-day dark energy** in a Hi-COLA run, not just the true cosmological-constant component:
+
+$$
+\texttt{cosmology\_OmegaLambda}=\Omega_{\mathrm{DE},0}
+=1-\Omega_{m0}-\Omega_{r0}.
+$$
+
+The frontend instead sets $\Omega_{\Lambda0}=(1-f_\phi)\Omega_{\mathrm{DE},0}$. Supplying that smaller cosmological-constant fraction to the backend would introduce an inconsistent curvature budget. The backend infers curvature from the density sum, whereas the frontend equations here assume spatial flatness.
+
+Match the frontend's total radiation density to the backend radiation computed from `cosmology_TCMB_kelvin` and `cosmology_Neffective`, including relativistic neutrinos. Small rounding residuals may be treated as zero curvature by the backend; do not rely on that handling to conceal genuinely different cosmologies. See [initial conditions](initial-conditions.md) for spectrum backscaling and particle-snapshot input.
+
 ## Begin with small grids
 
 For a workflow check, reduce the corresponding values in your Lua copy:

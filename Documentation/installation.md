@@ -2,6 +2,15 @@
 
 [Documentation home](index.md) · [Next: quickstart](quickstart.md)
 
+## Obtain the source
+
+```sh
+git clone https://github.com/Hi-COLACode/Hi-COLA.git
+cd Hi-COLA
+```
+
+An SSH checkout can use `git@github.com:Hi-COLACode/Hi-COLA.git` instead. On a cluster, load the relevant compiler, FFTW, GSL, Lua, and MPI modules before configuring or running the backend.
+
 ## Python frontend
 
 From a checkout of Hi-COLA, create an isolated Python 3 environment:
@@ -41,3 +50,9 @@ Success produces `HiCOLA/FML/COLASolver/nbody`. Compilation alone does not valid
 ## Documentation checks
 
 See the [publishing guide](publishing.md) for the Sphinx build and documentation-specific tests. These checks are independent of the scientific unit-test branch.
+
+## Historical dependency reference
+
+The original quickstart recorded successful use of NumPy 1.23.5, SciPy 1.10.0, SymPy 1.11.1, ConfigObj 5.0.8, FFTW 3.3.8, GSL 2.4, and Lua 5.4.1. This is a historical compatibility record, not a requirement to downgrade to those releases. The documentation CI environment is pinned separately in `requirements-docs.lock`; a documentation build is not a scientific backend-validation run.
+
+For Apple Clang, the old guide mentioned a repeated template-default-argument error in `FriendsOfFriends/FoF.h`. If that diagnostic occurs, inspect the declarations for repeated defaults or use a compatible GCC build. Do not apply historical line-number edits blindly to a different revision. FFTW thread library choices must match your installed library and compiler configuration; retain consistent MPI/OpenMP flags across all dependencies.
