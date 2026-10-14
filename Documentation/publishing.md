@@ -2,7 +2,7 @@
 
 [Documentation home](index.md)
 
-The site uses Sphinx, MyST Markdown, the PyData theme, and Sphinx-multiversion. Python API pages come from source definitions and docstrings. Executable generator and plotting modules are excluded from imports. Use NumPy-style docstrings for new functions.
+The site uses Sphinx, MyST Markdown, and the PyData theme. Python API pages come from source definitions and docstrings. Executable generator and plotting modules are excluded from imports. Use NumPy-style docstrings for new functions.
 
 ## Local build
 
@@ -14,35 +14,28 @@ MPLBACKEND=Agg python -m sphinx -W --keep-going -b html Documentation Documentat
 lychee --offline --include-fragments --no-ignore --exclude-path '(^|/)_static/' -- 'Documentation/_build/html/**/*.html'
 ```
 
-For a versioned build, fetch tags and set the default-branch name:
+Generated API stubs and build output are ignored by Git. The dropdown reads the shared `versions.json` file on the published site; a standalone local HTML build does not include that manifest.
 
-```sh
-git fetch origin --tags
-DOCS_DEFAULT_BRANCH=Hi-COLA_public MPLBACKEND=Agg sphinx-multiversion -W --keep-going Documentation Documentation/_build/html
-```
+## Publication and GitHub Pages
 
-Multiversion builds committed Git references, so uncommitted changes appear only in the ordinary Sphinx build. Generated API stubs and build output are ignored by Git. The version dropdown is populated by multiversion and preserves the current page when it exists in the selected version.
+`.github/workflows/documentation.yml` validates documentation on pull requests. Relevant default-branch pushes and manual runs build only the current documentation, then commit the assembled site to **`gh_pages`** using GitHub Pages Deploy Action. Existing version directories are retained, while `current/` is replaced. Git history is preserved.
 
-## GitHub Pages
+The workflow reads GitHub's default-branch setting, currently `Hi-COLA_public`, so renaming that branch needs no workflow edit. Documentation, frontend/API source, dependencies, packaging, README/logo assets, and workflow changes trigger builds. Superseded runs for the same branch or PR are cancelled; publication jobs are serialised to avoid concurrent site updates. Pull requests never publish.
 
-`.github/workflows/documentation.yml` validates documentation on pull requests and builds the default branch and release tags on default-branch pushes. The documentation workflow runs only for changes to documentation, frontend/API source, its dependencies, packaging, README/logo assets, or the workflow itself. New runs cancel superseded runs for the same branch or pull request. The independent Links workflow retains its own triggers.
+The workflow explicitly deploys the committed `gh_pages` content using `actions/upload-pages-artifact` and `actions/deploy-pages`. A branch push using `GITHUB_TOKEN` does not itself trigger GitHub's automatic branch-based Pages build. Select **GitHub Actions** in repository **Settings → Pages**. Allow default-branch and release-tag deployments in the `github-pages` environment. Publication requires `contents: write`, `pages: write`, and `id-token: write`; no additional secret is needed.
 
-Use **Actions → Documentation → Run workflow** on the default branch to rebuild all versions manually, including after a tag-only change. Matching default-branch pushes still rebuild every selected release tag; these changes reduce how often that build runs.
+The site root redirects to `current/`. A shared version list drives the dropdown, including on archived pages. Switching versions keeps the current page when it exists and otherwise opens the selected version's home page.
 
-Both workflows read GitHub's default-branch setting, currently `Hi-COLA_public`, so renaming that branch needs no workflow edit.
+## Release archives
 
-The build uploads its HTML using `actions/upload-pages-artifact`. The publication job uses `actions/deploy-pages`, with `pages: write` and `id-token: write`. It creates no publishing branch and needs no repository write permission. Pull requests never deploy. Select **GitHub Actions** in repository **Settings → Pages** and allow the default branch in the `github-pages` deployment environment.
+Publishing a GitHub release triggers archiving under its tag name. If the tag matches the saved current build, `current/` is moved into the release directory before current documentation is replaced. If the newly built current docs match, they are copied into the release directory. Otherwise, that tag alone is checked out and built once using its own lock file. Historical releases are not rebuilt on ordinary default-branch pushes.
 
-The site root redirects to the default-branch documentation. Each version has its own directory and a dropdown provided through Sphinx-multiversion's template context; no custom publication script or JSON manifest is needed.
+Each directory includes `source-commit.txt`. Existing release directories are not overwritten. Republishing a release with an unchanged tag reuses the archive; moving an already archived tag fails publication. Release tags must be single directory components containing letters, digits, dots, underscores, or hyphens, and cannot use reserved names such as `current`. Tags requiring a build must contain the Sphinx setup and documentation lock file. GitHub releases, rather than every Git tag, create archives; existing historical tags are not automatically backfilled.
 
-## Release versions and environment
-
-Version-number tags such as `v1.0.0` are included alongside the default branch. Tags without Sphinx sources and `conf.py` are skipped. Release tags should be immutable. A tag created after a deployment appears on the next relevant default-branch push or manual documentation run.
-
-Tagged pages are rebuilt from the tagged source rather than preserving old HTML bytes. Builds use the shared documentation configuration and pinned environment from the deployment checkout. `requirements-docs.lock` pins direct and transitive dependencies, and the workflows pin the Python patch version. Each release should retain its lock file for historical rebuilds. Pinning package versions does not guarantee identical bytes across operating systems or toolchains. If release-specific dependency environments later diverge, build those releases separately with their own locks rather than assuming a single multiversion environment reproduces all historical environments.
+Current source links point to its exact source commit, so archived copies retain the correct source links without editing their HTML. The Python version and direct/transitive package versions are pinned. Pinning versions does not guarantee identical bytes across operating systems or toolchains; the generated release HTML is retained unchanged in `gh_pages`.
 
 ## Independent link workflow
 
-`.github/workflows/links.yml`, named **Links**, uses Lychee for both local and external checks. Local checks run offline and validate files and anchors in rendered HTML. Theme template files are excluded from scan inputs; assets referenced by pages are still checked. Make **Links / local-links** a required branch-protection check to prevent merging broken local links.
+`.github/workflows/links.yml`, named **Links**, uses Lychee for both local and external checks. Local checks run offline and validate files and anchors in rendered HTML. Theme templates are excluded from scan inputs; assets referenced by pages are still checked. Make **Links / local-links** a required branch-protection check to prevent merging broken local links.
 
-External checks scan documentation, rendered HTML, and Python, C++, Lua, and INI source files directly, including URLs in comments, docstrings, strings, and code blocks. Failures are advisory because external sites may be unavailable or reject automated requests. Lychee adds a job summary and saves `documentation-link-report`; local results are saved as `local-link-report`. No custom extraction script or Python link tests are used.
+External checks scan documentation, rendered HTML, and Python, C++, Lua, and INI source files directly, including URLs in comments, docstrings, strings, and code blocks. Failures are advisory because external sites may be unavailable or reject automated requests. Lychee adds a job summary and saves `documentation-link-report`; local results are saved as `local-link-report`.
