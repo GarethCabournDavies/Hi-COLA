@@ -128,7 +128,7 @@ class SolverTests(unittest.TestCase):
             calB_lambda=lambda *a:0., calC_lambda=lambda *a:0., coupling_factor=lambda *a:0.)
         import warnings
         with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', message='At least one element of `rtol`')
+            warnings.filterwarnings('ignore', category=UserWarning, module=r'^scipy(\.|$)')
             result = ns.run_solver(data)
         np.testing.assert_allclose(result['Hubble'], result['a']**-1.5, rtol=2e-6)
         np.testing.assert_allclose(result['omega_m'],1.)
