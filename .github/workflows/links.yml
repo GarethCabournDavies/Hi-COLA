@@ -31,7 +31,7 @@ jobs:
         run: python -m pip install -r requirements-docs.txt
       - name: Build documentation for link tests
         run: python -m sphinx -W --keep-going -b html Documentation Documentation/_build/html
-      - name: Check local links, anchors, assets, and comment extraction
+      - name: Check local links, anchors, and assets
         run: python -m unittest discover -s .github/scripts -p 'test_documentation_links.py' -v
       - uses: actions/upload-artifact@v4
         with:
@@ -45,6 +45,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
           name: documentation-html
@@ -57,7 +60,14 @@ jobs:
             --verbose --no-progress
             --scheme http --scheme https
             --timeout 20 --max-retries 2 --max-concurrency 5
+            --include-verbatim
             './checked-documentation/**/*.html'
+            './README.md' './Documentation/**/*.md'
+            './HiCOLA/**/*.md' './HiCOLA/**/README'
+            './HiCOLA/**/*.py' './HiCOLA/**/*.cpp'
+            './HiCOLA/**/*.h' './HiCOLA/**/*.hpp'
+            './HiCOLA/**/*.lua' './HiCOLA/**/*.ini'
+            './setup.py'
           fail: false
           failIfEmpty: true
           jobSummary: true

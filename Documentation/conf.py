@@ -59,21 +59,3 @@ for title, module in modules.items():
     lines.extend(f"   {module}.{name}" for name in names)
     lines.append("")
 (ROOT / "Documentation/api/index.rst").write_text("\n".join(lines))
-
-# Include raw comment references so Sphinx linkcheck covers code as well as guides.
-sys.path.insert(0, str(ROOT / ".github/scripts"))
-from documentation_links import collect_comment_links, collect_documentation_links
-comment_lines = ["Code references", "===============", "",
-                 "Web links found in documentation, source comments, and docstrings, including bundled FML.", ""]
-reference_links = collect_comment_links(ROOT)
-for url, locations in collect_documentation_links(ROOT).items():
-    reference_links.setdefault(url, []).extend(locations)
-for url, locations in sorted(reference_links.items()):
-    comment_lines.extend([f"* `{url} <{url}>`_", "",
-                          "  Found in: " + ", ".join(f"``{location}``" for location in locations), ""])
-(ROOT / "Documentation/api/code-links.rst").write_text("\n".join(comment_lines))
-linkcheck_timeout = 20
-linkcheck_retries = 2
-linkcheck_workers = 5
-linkcheck_anchors = False
-linkcheck_rate_limit_timeout = 30

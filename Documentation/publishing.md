@@ -12,7 +12,7 @@ Use Python 3.11 or newer in an isolated environment:
 python -m pip install -r requirements-docs.txt
 MPLBACKEND=Agg python -m sphinx -W --keep-going -b html Documentation Documentation/_build/html
 python -m unittest discover -s .github/scripts -p 'test_*.py' -v
-lychee --scheme http --scheme https --timeout 20 --max-retries 2 --max-concurrency 5 'Documentation/_build/html/**/*.html'
+lychee --scheme http --scheme https --timeout 20 --max-retries 2 --max-concurrency 5 --include-verbatim 'Documentation/_build/html/**/*.html' README.md 'Documentation/**/*.md' 'HiCOLA/**/*.py' 'HiCOLA/**/*.cpp' 'HiCOLA/**/*.h' 'HiCOLA/**/*.hpp' 'HiCOLA/**/*.lua' 'HiCOLA/**/*.ini' 'HiCOLA/**/*.md' 'HiCOLA/**/README' setup.py
 ```
 
 Open `Documentation/_build/html/index.html` to inspect the site. The online version dropdown reads the shared `versions.json` manifest created by the publishing job; it is not populated in a standalone local build. Generated API stubs and build outputs are ignored by Git.
@@ -27,9 +27,9 @@ In repository **Settings → Pages**, select **GitHub Actions** as the publishin
 
 ## Link checks
 
-`test_documentation_links.py` checks all built local links, page anchors, and referenced assets after the HTML build. It also verifies extraction of URLs from comments and docstrings without importing executable code. A generated code-reference page includes links from Python docstrings and comments, C/C++ comments, and Lua/INI comments, including bundled FML sources.
+`test_documentation_links.py` checks all built local links, page anchors, and referenced assets after the HTML build.
 
-The independent `.github/workflows/links.yml` workflow builds on pull requests and default-branch pushes. Its `local-links` job runs the unit tests and retains the checked HTML artifact. Its advisory `external-links` job uses [lycheeverse/lychee-action](https://github.com/lycheeverse/lychee-action), with Lychee pinned to `v0.24.2`, to check HTTP and HTTPS links in the built HTML artifact. This includes guides, API docstrings, and generated code references. The check reuses the tested HTML instead of rebuilding it. Install the Lychee CLI separately to run the local network command above. It adds a GitHub job summary and saves `lychee/report.md` as the `documentation-link-report` artifact even when links fail. External failures are **advisory** and do not block publication: older references can be dead, and some sites reject automated requests. External fragment anchors are not checked; local HTML anchors are. Reports retain the failed URL and source location for investigation. Local structural failures fail the independent link workflow. To prevent merging a pull request with broken local links, make **Links / local-links** a required check in the default branch protection rules.
+The independent `.github/workflows/links.yml` workflow builds on pull requests and default-branch pushes. Its `local-links` job runs the unit tests and retains the checked HTML artifact. Its advisory `external-links` job uses [lycheeverse/lychee-action](https://github.com/lycheeverse/lychee-action), with Lychee pinned to `v0.24.2`, to check HTTP and HTTPS links directly in documentation and source files, as well as the built HTML artifact. This includes URLs in code comments, docstrings, strings, and code blocks, including bundled FML sources. The check reuses the tested HTML instead of rebuilding it. Install the Lychee CLI separately to run the local network command above. It adds a GitHub job summary and saves `lychee/report.md` as the `documentation-link-report` artifact even when links fail. External failures are **advisory** and do not block publication: older references can be dead, and some sites reject automated requests. External fragment anchors are not checked; local HTML anchors are. Reports retain the failed URL and source location for investigation. Local structural failures fail the independent link workflow. To prevent merging a pull request with broken local links, make **Links / local-links** a required check in the default branch protection rules.
 
 ## Frozen release versions
 

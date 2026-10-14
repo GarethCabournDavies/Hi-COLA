@@ -31,6 +31,5 @@ backend
 outputs
 troubleshooting
 api/index
-api/code-links
 publishing
 ```

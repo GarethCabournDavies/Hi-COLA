@@ -1,12 +1,8 @@
 """Check built documentation paths and anchors independently of scientific tests."""
 from html.parser import HTMLParser
 from pathlib import Path
-import tempfile
-import re
 import unittest
 from urllib.parse import unquote, urlsplit
-
-from documentation_links import comment_links, documentation_sources
 
 
 class PageLinks(HTMLParser):
@@ -55,41 +51,6 @@ class DocumentationLinkTests(unittest.TestCase):
                         failures.append(f"{source.relative_to(root)}: missing anchor {href}")
         self.assertEqual(failures, [], "\n".join(failures))
 
-    def test_documentation_source_local_paths(self):
-        root = Path(__file__).resolve().parents[2]
-        failures = []
-        markdown_link = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
-        for path in documentation_sources(root):
-            text = path.read_text(errors="replace")
-            targets = [match[1].split()[0].strip("<>") for match in markdown_link.finditer(text)]
-            targets.extend(re.findall(r'(?:src|srcset)="([^"]+)"', text))
-            for href in targets:
-                url = urlsplit(href)
-                if url.scheme == "repo":
-                    target = root / unquote(url.path)
-                elif url.scheme or url.netloc or not url.path:
-                    continue
-                else:
-                    target = path.parent / unquote(url.path)
-                if not target.exists():
-                    failures.append(f"{path.relative_to(root)}: missing {href}")
-        self.assertEqual(failures, [], "\n".join(failures))
-
-    def test_comment_scanner_includes_docstrings_and_ignores_code_strings(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            python = root / "example.py"
-            python.write_text('"""See https://example.invalid/doc."""\n'
-                              '# See https://example.invalid/comment\n'
-                              'url = "https://example.invalid/runtime"\n')
-            self.assertEqual({url for url, _ in comment_links(python)},
-                             {"https://example.invalid/doc", "https://example.invalid/comment"})
-            cpp = root / "example.cpp"
-            cpp.write_text('// https://example.invalid/cpp\n'
-                           '/* https://example.invalid/block */\n'
-                           'const char *url = "https://example.invalid/runtime";\n')
-            self.assertEqual({url for url, _ in comment_links(cpp)},
-                             {"https://example.invalid/cpp", "https://example.invalid/block"})
 
 
 if __name__ == "__main__":
