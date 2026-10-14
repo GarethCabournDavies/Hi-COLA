@@ -1,0 +1,6 @@
+# Runtime imports needed by the frontend; unittest is included with Python.
+numpy
+scipy
+sympy
+matplotlib
+configobj
