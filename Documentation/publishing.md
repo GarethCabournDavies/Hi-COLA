@@ -25,7 +25,11 @@ Multiversion builds committed Git references, so uncommitted changes appear only
 
 ## GitHub Pages
 
-`.github/workflows/documentation.yml` validates documentation on pull requests and builds the default branch and release tags on default-branch pushes. Both workflows read GitHub's default-branch setting, currently `Hi-COLA_public`, so renaming that branch needs no workflow edit.
+`.github/workflows/documentation.yml` validates documentation on pull requests and builds the default branch and release tags on default-branch pushes. The documentation workflow runs only for changes to documentation, frontend/API source, its dependencies, packaging, README/logo assets, or the workflow itself. New runs cancel superseded runs for the same branch or pull request. The independent Links workflow retains its own triggers.
+
+Use **Actions → Documentation → Run workflow** on the default branch to rebuild all versions manually, including after a tag-only change. Matching default-branch pushes still rebuild every selected release tag; these changes reduce how often that build runs.
+
+Both workflows read GitHub's default-branch setting, currently `Hi-COLA_public`, so renaming that branch needs no workflow edit.
 
 The build uploads its HTML using `actions/upload-pages-artifact`. The publication job uses `actions/deploy-pages`, with `pages: write` and `id-token: write`. It creates no publishing branch and needs no repository write permission. Pull requests never deploy. Select **GitHub Actions** in repository **Settings → Pages** and allow the default branch in the `github-pages` deployment environment.
 
@@ -33,7 +37,7 @@ The site root redirects to the default-branch documentation. Each version has it
 
 ## Release versions and environment
 
-Version-number tags such as `v1.0.0` are included alongside the default branch. Tags without Sphinx sources and `conf.py` are skipped. Release tags should be immutable. A tag created after a deployment appears on the next default-branch push.
+Version-number tags such as `v1.0.0` are included alongside the default branch. Tags without Sphinx sources and `conf.py` are skipped. Release tags should be immutable. A tag created after a deployment appears on the next relevant default-branch push or manual documentation run.
 
 Tagged pages are rebuilt from the tagged source rather than preserving old HTML bytes. Builds use the shared documentation configuration and pinned environment from the deployment checkout. `requirements-docs.lock` pins direct and transitive dependencies, and the workflows pin the Python patch version. Each release should retain its lock file for historical rebuilds. Pinning package versions does not guarantee identical bytes across operating systems or toolchains. If release-specific dependency environments later diverge, build those releases separately with their own locks rather than assuming a single multiversion environment reproduces all historical environments.
 
