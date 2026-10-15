@@ -6,6 +6,18 @@
   <img alt="Hi-COLA logo" src="assets/logos/Hi-COLA-light.png" width="160">
 </picture>
 
+**Release status**
+
+[![License](https://img.shields.io/github/license/GarethCabournDavies/Hi-COLA?label=license)](https://github.com/GarethCabournDavies/Hi-COLA?tab=License-1-ov-file)
+[![PyPI: not published](https://img.shields.io/badge/PyPI-not%20published-lightgrey?logo=pypi)](https://pypi.org/search/?q=Hi-COLA)
+[![conda-forge: not published](https://img.shields.io/badge/conda--forge-not%20published-lightgrey?logo=condaforge)](https://anaconda.org/search?q=hi-cola)
+[![Python 3](https://img.shields.io/badge/Python-3-blue?logo=python)](pyproject.toml)
+
+**Development status**
+
+[![Unit tests](https://github.com/GarethCabournDavies/Hi-COLA/actions/workflows/unit-tests.yml/badge.svg?branch=Hi-COLA_public)](https://github.com/GarethCabournDavies/Hi-COLA/actions/workflows/unit-tests.yml)
+[![Test coverage: not measured](https://img.shields.io/badge/coverage-not%20measured-lightgrey)](https://github.com/GarethCabournDavies/Hi-COLA/blob/hicola-unit-tests/.github/workflows/unit-tests.yml)
+
 **Fast, approximate N-body simulations of structure formation in reduced Horndeski gravity.**
 
 [User manual](Documentation/Hi-COLA_User_manual.pdf) · [Quickstart](Documentation/Hi-COLA_Quickstart_guide.pdf) · [Contributing](CONTRIBUTING.md)
