@@ -80,9 +80,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     env:
       MPLBACKEND: Agg
-      SITE: ${{ runner.temp }}/documentation-site
       RELEASE_TAG: ${{ github.event.release.tag_name }}
     steps:
+      - name: Set publication directory
+        run: printf 'SITE=%s/documentation-site\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
