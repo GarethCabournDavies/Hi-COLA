@@ -1,5 +1,7 @@
 # Hi-COLA
 
+[![Documentation](https://github.com/GarethCabournDavies/Hi-COLA/actions/workflows/documentation.yml/badge.svg)](https://github.com/GarethCabournDavies/Hi-COLA/actions/workflows/documentation.yml)
+
 <p align="left">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="Hi-COLA-dark.png">
