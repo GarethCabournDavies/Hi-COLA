@@ -70,3 +70,18 @@ wrapper: check exit status and error diagnostics, parse the generated expansion
 and force tables, compare against analytic GR limits, then compare power
 spectra statistically with explicit tolerances. Do not compare stochastic
 simulation outputs byte-for-byte or replace the simulator with a mock.
+
+### Python lint checks
+
+The Ruff workflow checks pull requests and pushes to the default branch. To run
+the same check locally:
+
+```sh
+python -m pip install ruff==0.17.0
+ruff check .
+```
+
+This checks syntax and core correctness rules, without requiring formatting or
+local Git hooks. FML and scratch work are excluded. The two frontend modules
+that create SymPy symbols through `exec(declare_symbols())` have an exception
+for undefined-name checks (`F821`); other selected rules still apply.
