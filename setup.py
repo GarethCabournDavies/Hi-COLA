@@ -3,8 +3,6 @@ setup(
     name = 'Hi_COLA',
     packages = find_packages(
     ),
-<<<<<<< HEAD
-=======
     extras_require = {
         'tests': [
             'numpy',
@@ -15,5 +13,4 @@ setup(
             'pandas',
         ],
     },
->>>>>>> d99e946 (Unit test fixes)
 )
