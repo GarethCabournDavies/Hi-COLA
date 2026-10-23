@@ -22,7 +22,7 @@ def read_in_parameters(horndeski_path, numerical_path):
 
     GR_flag = numerical_read.as_bool('GR_flag')
 
-    forwards_flag = numerical_read.get('forwards_flag', False)
+    forwards_flag = numerical_read.as_bool('forwards_flag') if 'forwards_flag' in numerical_read else False
 
     threshold_value = numerical_read.as_float('threshold')
 
