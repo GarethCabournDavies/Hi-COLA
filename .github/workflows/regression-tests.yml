@@ -31,11 +31,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP/hicola-regression"
           docker run --rm \
             -e OMPI_ALLOW_RUN_AS_ROOT=1 -e OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 \
-            -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory \
-            -e GIT_CONFIG_VALUE_0=/repository/.git \
             -v "$GITHUB_WORKSPACE:/repository:ro" \
             -v "$RUNNER_TEMP/hicola-regression:/artifacts" \
-            hicola-runtime python /repository/tests/regression_tests/run.py \
+            hicola-runtime sh -ec '
+              # The local clone transport checks ownership in git-upload-pack too.
+              git config --global --add safe.directory /repository/.git
+              exec python /repository/tests/regression_tests/run.py "$@"
+            ' sh \
             --repository /repository --candidate-ref "$GITHUB_SHA" \
             --prefix /usr --make-arg LUA_INCLUDE=/usr/include/lua5.4 \
             --make-arg 'LUA_LINK=-llua5.4 -ldl' \
