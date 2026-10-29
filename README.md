@@ -26,3 +26,11 @@ For runnable small simulations and the Docker runtime, see
 [examples/small_simulations](examples/small_simulations/README.md).
 For baseline/MPI comparisons, see the
 [regression workflow](.github/workflows/regression-tests.yml).
+
+Regression CI generates baseline and candidate outputs once. Summary comparisons
+check matter power spectra, expansion/growth tables, particle counts, mean velocity,
+RMS speed and lightcone counts. The separate particle-reproducibility job compares
+positions, velocities, force grids and individual lightcone crossings and is advisory.
+Require the `Regression summary statistics` check in branch protection; leave
+`Regression particle reproducibility` optional. Particle-level comparisons use the
+explicit numerical tolerances in `tests/regression_tests/compare.py`.

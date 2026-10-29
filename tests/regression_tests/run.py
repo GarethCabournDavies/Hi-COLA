@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 import numpy as np
-from compare import close, force, lightcone, numeric, particles, TOLERANCES
+from compare import close, force, lightcone, numeric, particles, velocity_statistics, TOLERANCES
 from baseline import load_baseline
 
 HERE = Path(__file__).resolve().parent
@@ -51,7 +51,7 @@ def build(source, args, baseline=False):
 
 
 def run_cases(source, backend, work, args):
-    tables = {model:frontend(source,work,model) for model in ('horndeski','kmouflage')}
+    tables = {model:frontend(source,work,model) for model in ('horndeski','kmouflage') if model in args.cases}
     for ranks in args.ranks:
         for case in args.cases:
             folder = work/f'{case}-np{ranks}'
@@ -76,47 +76,115 @@ def run_cases(source, backend, work, args):
                 command(launch+[backend/'force_probe',probe_config,folder/f'force-{screened}'],source,folder/f'force-{screened}.log')
 
 
-def compare_runs(baseline, candidate, args):
-    results = {}
-    for model in ('horndeski','kmouflage'):
-        for name in (('expansion','force','full') if model=='horndeski' else ('expansion','force')):
-            ref = next((baseline/'frontend'/model).glob(f'{model}_*_{name}.txt'))
-            got = candidate/'frontend'/model/ref.name
-            results[f'{model}/frontend/{name}'] = close(numeric(got),numeric(ref),'tables')
-    for ranks in args.ranks:
-        for case in args.cases:
-            key = f'{case}-np{ranks}'
-            ref,got = baseline/key/'output',candidate/key/'output'
-            reference_files = sorted(p.relative_to(ref) for p in ref.rglob('*.txt') if not p.relative_to(ref).parts[0].startswith('lightcone_'))
-            actual_files = sorted(p.relative_to(got) for p in got.rglob('*.txt') if not p.relative_to(got).parts[0].startswith('lightcone_'))
+def compare_runs(baseline, candidate, args, flavour='all'):
+    """Compare shared outputs and retain every numerical difference in the report."""
+    if flavour not in ('summary', 'particles', 'all'):
+        raise ValueError(f'Unknown comparison flavour: {flavour}')
+    report = dict(comparisons={}, failures={})
+    summary = flavour in ('summary', 'all')
+    detailed = flavour in ('particles', 'all')
+
+    def check(key, callback):
+        try:
+            value = callback()
+            report['comparisons'][key] = value if value is not None else dict(matched=True)
+            return True
+        except Exception as error:
+            report['failures'][key] = f'{type(error).__name__}: {error}'
+            return False
+
+    def compare(key, actual, reference, kind):
+        return check(key, lambda: close(actual, reference, kind))
+
+    if summary:
+        for model in ('horndeski', 'kmouflage'):
+            if model not in args.cases:
+                continue
+            for name in (('expansion', 'force', 'full') if model == 'horndeski' else ('expansion', 'force')):
+                def frontend_table(model=model, name=name):
+                    ref = next((baseline/'frontend'/model).glob(f'{model}_*_{name}.txt'))
+                    return close(numeric(candidate/'frontend'/model/ref.name), numeric(ref), 'tables')
+                check(f'{model}/frontend/{name}', frontend_table)
+
+    def case_outputs(case, ranks):
+        key = f'{case}-np{ranks}'
+        ref, got = baseline/key/'output', candidate/key/'output'
+        if summary:
+            reference_files = sorted(p.relative_to(ref) for p in ref.rglob('*.txt')
+                                     if not p.relative_to(ref).parts[0].startswith('lightcone_'))
+            actual_files = sorted(p.relative_to(got) for p in got.rglob('*.txt')
+                                  if not p.relative_to(got).parts[0].startswith('lightcone_'))
             if actual_files != reference_files or not reference_files:
-                raise ValueError(f'{key}: output file inventory differs or is empty')
-            if not list(ref.glob('gravitymodel_*')) or not list(ref.rglob('pofk*txt')):
-                raise ValueError(f'{key}: missing growth or power spectrum')
+                raise ValueError('Output file inventory differs or is empty')
+            for folder in (ref, got):
+                if not list(folder.glob('gravitymodel_*')) or not list(folder.rglob('pofk*txt')):
+                    raise ValueError('Missing growth or power spectrum')
             for path in reference_files:
                 kind = 'power' if 'pofk' in path.name else 'tables'
-                results[f'{key}/{path}'] = close(numeric(got/path),numeric(ref/path),kind)
-            ref_parts = sorted(ref.rglob('gadget_z0.000.*'))
-            got_parts = sorted(got.rglob('gadget_z0.000.*'))
-            if len(ref_parts)!=ranks or len(got_parts)!=ranks:
-                raise ValueError(f'{key}: missing snapshot rank files')
-            ids,p,v = particles(ref_parts)
-            got_ids,got_p,got_v = particles(got_parts)
-            np.testing.assert_array_equal(got_ids,ids)
-            results[f'{key}/positions'] = close(got_p,p,'positions')
-            results[f'{key}/velocities'] = close(got_v,v,'velocities')
-            for screened in (False,True) if case in ('horndeski','kmouflage') else (False,):
-                a = sorted((baseline/key).glob(f'force-{screened}.*.txt'))
-                b = sorted((candidate/key).glob(f'force-{screened}.*.txt'))
-                if len(a)!=ranks or len(b)!=ranks:
-                    raise ValueError(f'{key}: missing force rank files')
-                a,b = force(a),force(b)
-                np.testing.assert_array_equal(a[:,:3],b[:,:3])
-                results[f'{key}/force-{screened}'] = close(b[:,3:],a[:,3:],'force')
-            if case=='lightcone':
-                results[f'{key}/lightcone'] = close(lightcone(sorted(got.rglob('*ascii_step*'))),
-                    lightcone(sorted(ref.rglob('*ascii_step*'))),'lightcone')
-    return results
+                compare(f'{key}/{path}', numeric(got/path), numeric(ref/path), kind)
+
+        ref_parts = sorted(ref.rglob('gadget_z0.000.*'))
+        got_parts = sorted(got.rglob('gadget_z0.000.*'))
+        if len(ref_parts) != ranks or len(got_parts) != ranks:
+            raise ValueError('Missing snapshot rank files')
+        ids, p, v = particles(ref_parts)
+        got_ids, got_p, got_v = particles(got_parts)
+        if summary:
+            compare(f'{key}/particle_count', np.array([len(got_ids)]), np.array([len(ids)]), 'counts')
+            compare(f'{key}/velocity_statistics', velocity_statistics(got_v), velocity_statistics(v), 'velocity_statistics')
+        if detailed and check(f'{key}/particle_ids', lambda: np.testing.assert_array_equal(got_ids, ids)):
+            compare(f'{key}/positions', got_p, p, 'positions')
+            compare(f'{key}/velocities', got_v, v, 'velocities')
+
+        for screened in (False, True) if case in ('horndeski', 'kmouflage') else (False,):
+            a = sorted((baseline/key).glob(f'force-{screened}.*.txt'))
+            b = sorted((candidate/key).glob(f'force-{screened}.*.txt'))
+            if len(a) != ranks or len(b) != ranks:
+                raise ValueError('Missing force rank files')
+            a, b = force(a), force(b)
+            if detailed:
+                check(f'{key}/force-{screened}/grid', lambda: np.testing.assert_array_equal(a[:, :3], b[:, :3]))
+                compare(f'{key}/force-{screened}', b[:, 3:], a[:, 3:], 'force')
+        if case == 'lightcone':
+            a = lightcone(sorted(ref.rglob('*ascii_step*')))
+            b = lightcone(sorted(got.rglob('*ascii_step*')))
+            if summary:
+                compare(f'{key}/lightcone_count', np.array([len(b)]), np.array([len(a)]), 'counts')
+            if detailed:
+                compare(f'{key}/lightcone', b, a, 'lightcone')
+
+    for ranks in args.ranks:
+        for case in args.cases:
+            check(f'{case}-np{ranks}/valid_outputs', lambda: case_outputs(case, ranks))
+    return report
+
+
+def compare_existing(work, flavour):
+    """Inspect saved simulations without compiling or executing either revision."""
+    manifest = json.loads((work/'report.json').read_text())
+    if not manifest.get('simulations_complete'):
+        raise ValueError('Simulation outputs are incomplete; see report.json')
+    args = argparse.Namespace(cases=manifest['cases'], ranks=manifest['ranks'])
+    report = dict(flavour=flavour, baseline=manifest['baseline'], candidate=manifest['candidate'])
+    report.update(compare_runs(work/'baseline', work/'candidate', args, flavour))
+    report['status'] = 'failed' if report['failures'] else 'passed'
+    path = work/f'{flavour}-report.json'
+    path.write_text(json.dumps(report, indent=2)+'\n')
+    print(f"{report['status'].upper()}: {flavour}: {len(report['comparisons'])} passed, "
+          f"{len(report['failures'])} failed; report {path}")
+    for key, message in report['failures'].items():
+        print(f'{key}: {message}')
+    if os.environ.get('GITHUB_STEP_SUMMARY'):
+        with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as stream:
+            stream.write(f"### {flavour.capitalize()} comparisons\n\n"
+                         f"{len(report['comparisons'])} passed; {len(report['failures'])} failed.\n\n")
+            for key in report['failures']:
+                stream.write(f'- `{key}`\n')
+    if report['failures'] and os.environ.get('GITHUB_ACTIONS') == 'true':
+        level = 'warning' if flavour == 'particles' else 'error'
+        print(f"::{level} title={flavour.capitalize()} regression differences::"
+              f"{len(report['failures'])} comparisons failed; see the job summary and report artifact.")
+    return not report['failures']
 
 
 def main():
@@ -130,10 +198,16 @@ def main():
     parser.add_argument('--make-arg',action='append',default=[])
     parser.add_argument('--ranks',type=int,nargs='+',default=[1,2],choices=(1,2))
     parser.add_argument('--cases',nargs='+',choices=CASES,default=list(CASES))
+    parser.add_argument('--flavour', choices=('all', 'summary', 'particles'), default='all')
+    execution = parser.add_mutually_exclusive_group()
+    execution.add_argument('--simulate-only', action='store_true', help='Generate shared outputs without comparing them')
+    execution.add_argument('--compare-only', action='store_true', help='Compare existing --work outputs without running simulations')
     args = parser.parse_args()
+    args.work = args.work.resolve()
+    if args.compare_only:
+        sys.exit(0 if compare_existing(args.work, args.flavour) else 1)
     if args.prefix is None:
         parser.error('Supply --prefix or set CONDA_PREFIX to the installed dependency prefix')
-    args.work = args.work.resolve()
     args.work.mkdir(parents=True,exist_ok=False)
     os.environ.update(OMP_NUM_THREADS='1',MPLBACKEND='Agg')
     os.environ['PATH'] = str(args.prefix/'bin')+os.pathsep+os.environ['PATH']
@@ -155,14 +229,17 @@ def main():
             manifest[label] = clone(args.repository,ref,source)
             backend = build(source,args,baseline=label=='baseline')
             run_cases(source,backend,work,args)
-        manifest['comparisons'] = compare_runs(args.work/'baseline',args.work/'candidate',args)
-        manifest['status'] = 'passed'
+        manifest['simulations_complete'] = True
+        manifest['status'] = 'simulated'
     except Exception as error:
         manifest.update(status='failed',error=str(error))
         raise
     finally:
         (args.work/'report.json').write_text(json.dumps(manifest,indent=2)+'\n')
-    print(f'PASS: {len(manifest["comparisons"])} comparisons; report {args.work/"report.json"}')
+    if args.simulate_only:
+        print(f'Simulations complete; report {args.work/"report.json"}')
+    else:
+        sys.exit(0 if compare_existing(args.work, args.flavour) else 1)
 
 
 if __name__=='__main__':

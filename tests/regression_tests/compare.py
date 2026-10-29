@@ -11,6 +11,8 @@ TOLERANCES = {
     'positions': (0., 2e-4),  # Mpc/h; GADGET stores float32 coordinates.
     'velocities': (2e-5, 2e-3),  # km/s
     'lightcone': (2e-5, 2e-3),  # Mpc/h; ASCII output has six significant digits.
+    'velocity_statistics': (2e-5, 2e-3),  # km/s; mean components and RMS speed.
+    'counts': (0., 0.),
 }
 
 
@@ -44,6 +46,16 @@ def record(stream):
     return payload
 
 
+def velocity_statistics(velocities):
+    """Return the mean velocity components and RMS speed in km/s."""
+    values = np.asarray(velocities, dtype=float)
+    if values.ndim != 2 or values.shape[1] != 3 or len(values) == 0:
+        raise ValueError('Expected a nonempty (N,3) velocity array')
+    if not np.isfinite(values).all():
+        raise ValueError('Nonfinite velocities')
+    return np.r_[values.mean(axis=0), np.sqrt(np.mean(np.sum(values**2, axis=1)))]
+
+
 def particles(paths):
     """Read GADGET format-1 snapshots and align particles by stable ID."""
     ids, positions, velocities = [], [], []
@@ -68,6 +80,8 @@ def particles(paths):
             else:
                 raise ValueError('Invalid particle ID record')
     ids, positions, velocities = map(np.concatenate,(ids,positions,velocities))
+    if not np.isfinite(positions).all() or not np.isfinite(velocities).all():
+        raise ValueError('Nonfinite snapshot positions or velocities')
     if len(ids) != 16**3 or len(np.unique(ids)) != len(ids):
         raise ValueError(f'Expected {16**3} unique particles, got {len(ids)}')
     order = np.argsort(ids)
