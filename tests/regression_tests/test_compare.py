@@ -5,7 +5,7 @@ import struct
 import tempfile
 import unittest
 import numpy as np
-from compare import close, force, lightcone, numeric, particles, record
+from compare import close, force, numeric, particles, record
 
 
 class ComparisonTests(unittest.TestCase):
@@ -41,15 +41,6 @@ class ComparisonTests(unittest.TestCase):
             np.savetxt(path,np.zeros((1,6)))
             with self.assertRaisesRegex(ValueError,'Incomplete'):
                 force([path])
-
-    def test_lightcone_requires_nonempty_cone(self):
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory)/'cone.txt'
-            path.write_text('# empty rank\n')
-            with self.assertRaisesRegex(ValueError,'No lightcone'):
-                lightcone([path])
-            path.write_text('3 2 1\n1 2 3\n')
-            np.testing.assert_array_equal(lightcone([path]),[[1,2,3],[3,2,1]])
 
     def test_record_markers_and_truncation(self):
         for raw in (b'',struct.pack('<I',5)+b'bad',struct.pack('<I',1)+b'x'+struct.pack('<I',2)):

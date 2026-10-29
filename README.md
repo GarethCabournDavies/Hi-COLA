@@ -27,10 +27,18 @@ For runnable small simulations and the Docker runtime, see
 For baseline/MPI comparisons, see the
 [regression workflow](.github/workflows/regression-tests.yml).
 
-Regression CI generates baseline and candidate outputs once. Summary comparisons
-check matter power spectra, expansion/growth tables, particle counts, mean velocity,
-RMS speed and lightcone counts. The separate particle-reproducibility job compares
-positions, velocities, force grids and individual lightcone crossings and is advisory.
+Regression CI covers GR, cubic Galileon (Horndeski), and manufactured K-mouflage.
+It generates baseline and candidate outputs once. Summary comparisons
+check matter power spectra, expansion/growth tables, particle counts, mean velocities
+and RMS speeds. The separate particle-reproducibility job compares
+positions, velocities and force grids and is advisory.
 Require the `Regression summary statistics` check in branch protection; leave
 `Regression particle reproducibility` optional. Particle-level comparisons use the
 explicit numerical tolerances in `tests/regression_tests/compare.py`.
+
+The K-mouflage regression uses fixed manufactured background/force tables and
+explicit screening settings. It is a reproducible backend check, including
+gradient screening, and is included in the required summary comparisons.
+Its expansion, force-table coefficients and smoothing settings must be kept
+consistent. These inputs do not represent a calibrated physical cosmology or
+test the physical-model frontend.

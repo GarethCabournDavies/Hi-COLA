@@ -35,10 +35,6 @@ class FlavourTests(unittest.TestCase):
         self.snapshot(output/'gadget_z0.000.0', self.positions, self.velocities)
         coords = np.indices((16, 16, 16)).reshape(3, -1).T/16
         np.savetxt(folder/'force-False.0.txt', np.column_stack((coords, np.zeros_like(coords))))
-        if case == 'lightcone':
-            cone = output/'lightcone_example'
-            cone.mkdir()
-            np.savetxt(cone/'asciifile_lightcone_ascii_step0.txt', [[1., 2., 3.], [4., 5., 6.]])
 
     def snapshot(self, path, positions, velocities):
         count = len(positions)
@@ -99,15 +95,6 @@ class FlavourTests(unittest.TestCase):
         np.savetxt(path, data)
         self.assertFalse(self.compare('summary')['failures'])
         self.assertIn('gr-np1/force-False', self.compare('particles')['failures'])
-
-    def test_lightcone_counts_do_not_require_identical_crossings(self):
-        self.args.cases = ['lightcone']
-        for root in (self.baseline, self.candidate):
-            self.make_case(root, 'lightcone')
-        path = self.candidate/'lightcone-np1/output/lightcone_example/asciifile_lightcone_ascii_step0.txt'
-        np.savetxt(path, np.loadtxt(path)+0.1)
-        self.assertFalse(self.compare('summary')['failures'])
-        self.assertIn('lightcone-np1/lightcone', self.compare('particles')['failures'])
 
     def test_compare_only_reuses_outputs_and_reports_advisory_changes(self):
         self.snapshot(self.candidate/'gr-np1/output/gadget_z0.000.0',

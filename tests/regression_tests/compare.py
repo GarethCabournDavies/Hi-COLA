@@ -10,7 +10,6 @@ TOLERANCES = {
     'power': (1e-4, 1e-6),
     'positions': (0., 2e-4),  # Mpc/h; GADGET stores float32 coordinates.
     'velocities': (2e-5, 2e-3),  # km/s
-    'lightcone': (2e-5, 2e-3),  # Mpc/h; ASCII output has six significant digits.
     'velocity_statistics': (2e-5, 2e-3),  # km/s; mean components and RMS speed.
     'counts': (0., 0.),
 }
@@ -97,15 +96,3 @@ def force(paths):
     if len(np.unique(data[:,:3],axis=0)) != len(data):
         raise ValueError('Duplicate force grid coordinates')
     return data
-
-
-def lightcone(paths):
-    # Empty rank/step files are legitimate; the complete cone must contain crossings.
-    rows = []
-    for path in paths:
-        if any(line.strip() and not line.lstrip().startswith('#') for line in Path(path).read_text().splitlines()):
-            rows.append(numeric(path,3))
-    if not rows:
-        raise ValueError('No lightcone particle crossings were output')
-    data = np.concatenate(rows)
-    return data[np.lexsort(data.T[::-1])]

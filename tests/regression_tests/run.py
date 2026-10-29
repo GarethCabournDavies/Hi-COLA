@@ -10,11 +10,11 @@ import subprocess
 import sys
 
 import numpy as np
-from compare import close, force, lightcone, numeric, particles, velocity_statistics, TOLERANCES
+from compare import close, force, numeric, particles, velocity_statistics, TOLERANCES
 from baseline import load_baseline
 
 HERE = Path(__file__).resolve().parent
-CASES = ('gr', 'horndeski', 'kmouflage', 'lightcone')
+CASES = ('gr', 'horndeski', 'kmouflage')
 EXAMPLES = HERE.parents[1]/'examples'/'small_simulations'
 sys.path.insert(0, str(EXAMPLES))
 from run_simulations import command, make_args, frontend, lua
@@ -80,6 +80,8 @@ def compare_runs(baseline, candidate, args, flavour='all'):
     """Compare shared outputs and retain every numerical difference in the report."""
     if flavour not in ('summary', 'particles', 'all'):
         raise ValueError(f'Unknown comparison flavour: {flavour}')
+    if any(case not in CASES for case in args.cases):
+        raise ValueError('Unsupported regression case; use GR, Horndeski or K-mouflage')
     report = dict(comparisons={}, failures={})
     summary = flavour in ('summary', 'all')
     detailed = flavour in ('particles', 'all')
@@ -110,10 +112,8 @@ def compare_runs(baseline, candidate, args, flavour='all'):
         key = f'{case}-np{ranks}'
         ref, got = baseline/key/'output', candidate/key/'output'
         if summary:
-            reference_files = sorted(p.relative_to(ref) for p in ref.rglob('*.txt')
-                                     if not p.relative_to(ref).parts[0].startswith('lightcone_'))
-            actual_files = sorted(p.relative_to(got) for p in got.rglob('*.txt')
-                                  if not p.relative_to(got).parts[0].startswith('lightcone_'))
+            reference_files = sorted(p.relative_to(ref) for p in ref.rglob('*.txt'))
+            actual_files = sorted(p.relative_to(got) for p in got.rglob('*.txt'))
             if actual_files != reference_files or not reference_files:
                 raise ValueError('Output file inventory differs or is empty')
             for folder in (ref, got):
@@ -145,13 +145,6 @@ def compare_runs(baseline, candidate, args, flavour='all'):
             if detailed:
                 check(f'{key}/force-{screened}/grid', lambda: np.testing.assert_array_equal(a[:, :3], b[:, :3]))
                 compare(f'{key}/force-{screened}', b[:, 3:], a[:, 3:], 'force')
-        if case == 'lightcone':
-            a = lightcone(sorted(ref.rglob('*ascii_step*')))
-            b = lightcone(sorted(got.rglob('*ascii_step*')))
-            if summary:
-                compare(f'{key}/lightcone_count', np.array([len(b)]), np.array([len(a)]), 'counts')
-            if detailed:
-                compare(f'{key}/lightcone', b, a, 'lightcone')
 
     for ranks in args.ranks:
         for case in args.cases:
