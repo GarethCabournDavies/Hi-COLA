@@ -12,11 +12,11 @@ dependencies = [
     "sympy>=1.12",
     "matplotlib>=3.8",
     "configobj>=5.0",
+    "pandas>=2.0",
 ]
 
 [project.optional-dependencies]
 tests = [
-    "pandas>=2.0",
     "coverage>=7.6",
 ]
 
