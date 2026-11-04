@@ -101,6 +101,19 @@ jobs:
           path: ${{ runner.temp }}/hicola-regression/run/summary-report.json
           retention-days: 14
           if-no-files-found: error
+      - name: Add summary statistics to job summary
+        if: always()
+        run: |
+          f="$RUNNER_TEMP/hicola-regression/run/summary-artifacts/README.md"
+          if [ -f "$f" ]; then cat "$f" >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Upload summary statistics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: regression-summary-statistics
+          path: ${{ runner.temp }}/hicola-regression/run/summary-artifacts/
+          retention-days: 14
+          if-no-files-found: error
 
   particles:
     name: Regression particle reproducibility

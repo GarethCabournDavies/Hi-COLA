@@ -12,6 +12,7 @@ import sys
 import numpy as np
 from compare import close, force, numeric, particles, velocity_statistics, TOLERANCES
 from baseline import load_baseline
+from artifacts import export_summary
 
 HERE = Path(__file__).resolve().parent
 CASES = ('gr', 'cubic_galileon', 'kmouflage')
@@ -163,6 +164,14 @@ def compare_existing(work, flavour):
     report['status'] = 'failed' if report['failures'] else 'passed'
     path = work/f'{flavour}-report.json'
     path.write_text(json.dumps(report, indent=2)+'\n')
+    if flavour in ('summary', 'all'):
+        # Ship the compared statistics themselves, not just the pass/fail report.
+        try:
+            exported = export_summary(work, manifest['cases'], manifest['ranks'])
+            print(f"Summary statistics written to {work/'summary-artifacts'}"
+                  + (f" ({len(exported['errors'])} outputs missing)" if exported['errors'] else ''))
+        except Exception as error:
+            print(f'Could not export summary statistics: {type(error).__name__}: {error}')
     print(f"{report['status'].upper()}: {flavour}: {len(report['comparisons'])} passed, "
           f"{len(report['failures'])} failed; report {path}")
     for key, message in report['failures'].items():

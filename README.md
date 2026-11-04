@@ -32,6 +32,7 @@ It generates baseline and candidate outputs once. Summary comparisons
 check matter power spectra, expansion/growth tables, particle counts, mean velocities
 and RMS speeds. The separate particle-reproducibility job compares
 positions, velocities and force grids and is advisory.
+Details of every check and artifact: `tests/regression_tests/README.md`.
 Require the `Regression summary statistics` check in branch protection; leave
 `Regression particle reproducibility` optional. Particle-level comparisons use the
 explicit numerical tolerances in `tests/regression_tests/compare.py`.
