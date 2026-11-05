@@ -41,8 +41,23 @@ migration gates for the same inputs and toolchain, not physics accuracy targets.
 - `regression-summary-statistics`: the compared data, written by `artifacts.py`:
   - `baseline/` and `candidate/<case>-np<n>/`: P(k) and expansion/growth tables
   - `frontend/<revision>/<model>/`: frontend tables
-  - `plots/`: P(k) for both revisions with the fractional difference
+  - `plots/`: figures for every compared quantity (see below)
   - `statistics.json` and `README.md`: velocity statistics table and index. The README is also added to the job summary.
+
+**Plots** (`plots.py`) overlay baseline and candidate. Their lower panels show
+`(candidate − baseline) / (atol + rtol × |baseline|)`, so the dotted lines at ±1 are
+the pass limits. They are written even when a comparison fails; a plotting problem is
+listed in the artifact's `README.md` and never changes the job result.
+
+| Figure | Shows |
+|---|---|
+| `overview.png` | Worst difference over tolerance for each group of checks |
+| `<case>-np<n>/power_evolution.png` | P(k) at every output redshift |
+| `<case>-np<n>/velocity_statistics.png` | Mean velocity components and RMS speed |
+| `<case>-np<n>/<table>.png` | Every column of each `pofk*`, `gravitymodel_*` and `cosmology_*` table, six per figure; larger tables continue in `<table>_<page>of<pages>.png` |
+| `frontend/<model>/<table>.png` | Every column of each frontend table |
+
+Particle counts and snapshot sanity checks are pass/fail, so they are reported rather than plotted.
 
 ### Particle reproducibility: `Regression particle reproducibility` job (advisory)
 
@@ -68,7 +83,7 @@ These run before the simulations (`python -m unittest discover -s tests/regressi
 | `test_flavours.py` | Which flavour detects which change: power drift, velocity-dispersion drift, missing P(k) and non-finite snapshots fail `summary`; particle translation, reassigned velocities and force drift affect only `particles`; `--compare-only` reuse |
 | `test_baseline.py` | Pinned baseline fetchable into a fresh clone; ref/commit mismatch rejected |
 | `test_runner.py` | Candidate branch resolution after a fresh clone |
-| `test_artifacts.py` | Summary-statistics export (tables, velocity stats, plots, index); missing outputs recorded rather than raised |
+| `test_artifacts.py` | Summary-statistics export (tables, velocity stats, every plot type, index); missing or mismatched outputs recorded rather than raised; multi-figure tables; column labels; axis scales |
 
 ## Running locally
 
