@@ -43,6 +43,23 @@ def write_all_data(a_arr_inv, E_arr, E_prime_arr, phi_prime_arr, phi_primeprime_
     datafile_id.close()    #close the file
 
 def write_data_flex(data, output_filename_as_string, datanames=''):
+    """Export equal-length arrays as columns in an ASCII table.
+
+    Parameters
+    ----------
+    data : sequence of array-like
+        One array per column. Column order and row order are preserved.
+    output_filename_as_string : str or path-like
+        Destination file. Its parent directory must exist. An existing file is
+        overwritten; collision avoidance is handled by the caller.
+    datanames : str, optional
+        Header text written by :func:`numpy.savetxt` as a ``#``-prefixed
+        first line. The default empty string writes no header.
+
+    Notes
+    -----
+    Values use ``%.4e`` formatting, retaining five significant digits.
+    """
     datafile_id = open(output_filename_as_string, 'wb')    #here you open the ascii file
     format_list = list(np.repeat('%.4e',len(data)))
     newdata = []
