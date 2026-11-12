@@ -39,6 +39,7 @@ After each simulation the script draws its plots into `<case>/plots/` with the
 | `hicola_plot_background` | `cosmology_*.txt` | H/H0, d ln H / d ln a and density fractions against a |
 | `hicola_plot_growth` | `gravitymodel_*_k*.txt` | D1(a, k) and G_eff/G against a for each k |
 | `hicola_plot_frontend` | frontend `*_expansion.txt`, `*_force.txt` | E, E'/E, screening coefficient, coupling and G_G4/G_N against a |
+| `hicola_plot_parameter_scan` | parameter scanner `<scan>_<category>s.txt` | scanned points in two chosen quantities, coloured by viability category |
 
 Modified-gravity cases are plotted with `--reference` set to the GR run. With a
 reference, each panel overlays the run (solid blue) and the reference (dashed orange),
@@ -50,6 +51,11 @@ which redshifts or k values to plot. Each tool also runs on its own, for example
 hicola_plot_pofk example-output/cubic_galileon/output \
   --reference example-output/gr/output --bands 0.01 0.025
 ```
+
+`hicola_plot_parameter_scan` is not run by these examples; point it at the
+scanner's output folder. It plots the latest scan there (`--scan` picks another),
+using the first two varying parameters unless `--x` and `--y` name columns from the
+scan files, `E_dS` or `f_phi`.
 
 `--bands` takes at most two fractions; give it no values to draw none. Run any tool
 with `--help` for its options. Frontend plots are written to
