@@ -53,12 +53,23 @@ def write_data_flex(data, output_filename_as_string, datanames=''):
     np.savetxt(datafile_id, realdata, fmt=format_list, header=datanames)    #here the ascii file is populated.
     datafile_id.close()    #close the file
 
-def make_scan_array(minv, maxv, numv):
+SCAN_SPACINGS = ('linear', 'log')
+
+
+def make_scan_array(minv, maxv, numv, spacing='linear'):
+    """Return numv scan values from minv to maxv, evenly spaced in value ('linear') or in log ('log')."""
+    if spacing not in SCAN_SPACINGS:
+        raise ValueError(f"Scan spacing must be one of {SCAN_SPACINGS}, not {spacing!r}")
     if minv == maxv:
         numv = 1
+    if spacing == 'log':
+        if minv == 0 or maxv == 0 or (minv < 0) != (maxv < 0):
+            raise ValueError(f"Log spacing needs limits of the same sign, not {minv} and {maxv}")
+        return np.geomspace(minv, maxv, numv, endpoint=True)
     return np.linspace(minv,maxv,numv,endpoint=True)
 
-def generate_scan_array(dictionary, quantity_string):
+def generate_scan_array(dictionary, quantity_string, spacing='linear'):
+    """Read <quantity>_min, _max and _number from a ConfigObj and return the scan values."""
     maxv_string = quantity_string+"_max"
     minv_string = quantity_string+"_min"
     numv_string = quantity_string+"_number"
@@ -66,7 +77,7 @@ def generate_scan_array(dictionary, quantity_string):
     minv = dictionary.as_float(minv_string)
     numv = dictionary.as_int(numv_string)
 
-    return make_scan_array(minv,maxv,numv)
+    return make_scan_array(minv,maxv,numv,spacing)
 
 def ESS_dS_parameters(EdS, f_phi, k1seed, g31seed,Omega_r0h2 = 4.28e-5, Omega_b0h2 = 0.02196, Omega_c0h2 = 0.1274, h = 0.7307):
     Omega_r0 = Omega_r0h2/h/h

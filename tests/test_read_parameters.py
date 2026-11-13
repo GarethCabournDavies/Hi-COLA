@@ -48,6 +48,42 @@ class ParameterTests(unittest.TestCase):
         self.assertIsInstance(result['simulation_parameters'][2],bool)
         self.assertEqual(result['mass_ratio_list'],[1.]*7)
 
+    def test_scan_settings_switches_and_forwards_flag(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for pink, forwards, expected in (('False', 'True', (False, True)), (None, None, (True, False))):
+                config = scan_settings()
+                for key, value in (('pink_switch', pink), ('forwards_flag', forwards)):
+                    config.pop(key, None)
+                    if value is not None:
+                        config[key] = value
+                config.filename = str(Path(directory)/'settings.ini')
+                config.write()
+                with self.subTest(pink=pink, forwards=forwards):
+                    result = rp.read_in_scan_settings(config.filename)
+                    self.assertEqual((result['pink_switch'], result['forwards_flag']), expected)
+
+    def test_shipped_scan_parameters(self):
+        scanner = ROOT/'Utilities/Scanner'
+        settings = rp.read_in_scan_settings(str(scanner/'scan_settings.ini'))
+        self.assertIs(settings['scan_values_from_file'], False)
+        result = rp.read_in_scan_parameters(str(scanner/'scan_parameters.ini'))
+        Hubble0, phi0, phiprime0 = result['initial_condition_arrays']
+        np.testing.assert_allclose(phi0, [1.])
+        np.testing.assert_allclose(result['cosmological_parameter_arrays'][2],
+                                   (1-np.array([.125, .126]))*(1-(.02196+.1274+4.28e-5)/.7307**2))
+        self.assertEqual(len(result['Horndeski_parameter_arrays']), 4)
+
+    def test_scan_parameter_spacing(self):
+        scanner = ROOT/'Utilities/Scanner'
+        with tempfile.TemporaryDirectory() as directory:
+            config = ConfigObj(str(scanner/'scan_parameters.ini'))
+            config.update({'Hubble0_min': '1', 'Hubble0_max': '100', 'Hubble0_number': '3', 'Hubble0_spacing': 'log'})
+            config.pop('phi0_spacing')
+            config.filename = str(Path(directory)/'values.ini')
+            config.write()
+            result = rp.read_in_scan_parameters(config.filename)
+        np.testing.assert_allclose(result['initial_condition_arrays'][0], [1., 10., 100.])
+
     def test_shipped_parameters(self):
         result = rp.read_in_parameters(str(ROOT/'Parameter_files/Frontend_parameter_files/examples/ESS/ESS-A.ini'),
                                        str(ROOT/'Parameter_files/Frontend_parameter_files/numerical_parameters.ini'))

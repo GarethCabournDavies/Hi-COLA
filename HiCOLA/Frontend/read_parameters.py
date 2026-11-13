@@ -321,6 +321,7 @@ def read_in_scan_settings(path_to_settings):
     max_redshift = numerical_read.as_float('max_redshift')
     Npoints = numerical_read.as_int('Npoints')
     GR_flag = numerical_read.as_bool('GR_flag')
+    forwards_flag = numerical_read.as_bool('forwards_flag') if 'forwards_flag' in numerical_read else False
     threshold_value = numerical_read.as_float('threshold')
     
     simulation_parameters = [Npoints, max_redshift, suppression_flag, threshold_value, GR_flag]
@@ -330,15 +331,15 @@ def read_in_scan_settings(path_to_settings):
     yellow_switch = numerical_read.as_bool("yellow_switch")
     blue_switch = numerical_read.as_bool("blue_switch")
     red_switch = numerical_read.as_bool("red_switch")
-    pink_switch = numerical_read.as_bool("pink_switch")
+    pink_switch = numerical_read.as_bool("pink_switch") if "pink_switch" in numerical_read else True
     tolerance = numerical_read.as_float("tolerance")
     Omega_m_crit= numerical_read.as_float("Omega_m_crit")
     
 
-    simparams_names = {'simulation_parameters':simulation_parameters, 'model_name':model_name, 'cosmo_name':cosmo_name}
+    simparams_names = {'simulation_parameters':simulation_parameters, 'model_name':model_name, 'cosmo_name':cosmo_name, 'forwards_flag':forwards_flag}
     read_out_dict.update(simparams_names)
 
-    scanning_dict = {'red_switch':red_switch, 'blue_switch':blue_switch, 'yellow_switch':yellow_switch, 'early_DE_threshold':early_DE_threshold, 'tolerance':tolerance, 'Omega_m_crit':Omega_m_crit}
+    scanning_dict = {'red_switch':red_switch, 'blue_switch':blue_switch, 'yellow_switch':yellow_switch, 'pink_switch':pink_switch, 'early_DE_threshold':early_DE_threshold, 'tolerance':tolerance, 'Omega_m_crit':Omega_m_crit}
     read_out_dict.update(scanning_dict)
     
     #mass ratios
@@ -414,16 +415,16 @@ def read_in_scan_parameters(path_to_scan_parameters):
     #cosmological parameter values
     h = scan_read.as_float("h")
     Omega_m0_number = scan_read.as_int("Omega_m0_number")
-    Omega_m0_spacing = scan_read["Omega_m0_spacing"]
+    Omega_m0_spacing = scan_read.get("Omega_m0_spacing", "linear")
     Omega_r0_number = scan_read.as_int("Omega_r0_number")
-    Omega_r0_spacing = scan_read["Omega_r0_spacing"]
-    f_phi_spacing = scan_read["f_phi_spacing"]
+    Omega_r0_spacing = scan_read.get("Omega_r0_spacing", "linear")
+    f_phi_spacing = scan_read.get("f_phi_spacing", "linear")
 
     if scan_read["Omega_m0_min"] == "None":
         Omega_b0h2_min = scan_read.as_float("Omega_b0h2_min")
         Omega_b0h2_max = scan_read.as_float("Omega_b0h2_max")
         # Omega_b0h2_array = msa(Omega_b0h2_min, Omega_b0h2_max, Omega_m0_number)
-        Omega_b0h2_array = msa(Omega_b0h2_min, Omega_b0h2_max, Omega_m0_number)
+        Omega_b0h2_array = msa(Omega_b0h2_min, Omega_b0h2_max, Omega_m0_number, Omega_m0_spacing)
 
 
         Omega_c0h2_min = scan_read.as_float("Omega_c0h2_min")
@@ -463,11 +464,11 @@ def read_in_scan_parameters(path_to_scan_parameters):
     cosmological_parameter_arrays = [Omega_r0_array, Omega_m0_array, Omega_l0_array]
     
     #initial conditions
-    Hubble0_spacing  = scan_read["Hubble0_spacing"]
+    Hubble0_spacing  = scan_read.get("Hubble0_spacing", "linear")
     Hubble0_array = gsa(scan_read,"Hubble0",Hubble0_spacing)
-    phi0_spacing  = scan_read["phi0_spacing"]
+    phi0_spacing  = scan_read.get("phi0_spacing", "linear")
     phi0_array = gsa(scan_read, "phi0",phi0_spacing)
-    phiprime0_spacing  = scan_read["phiprime0_spacing"]
+    phiprime0_spacing  = scan_read.get("phiprime0_spacing", "linear")
     phiprime0_array = gsa(scan_read, "phiprime0",phiprime0_spacing)
     
     initial_condition_arrays = [Hubble0_array, phi0_array, phiprime0_array]

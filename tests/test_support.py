@@ -18,6 +18,12 @@ class SupportTests(unittest.TestCase):
                 s.make_scan_array(0.,1.,count)
         with self.assertRaises(KeyError):
             s.generate_scan_array(config,'missing')
+        np.testing.assert_allclose(s.make_scan_array(1.,100.,3,'log'),[1.,10.,100.])
+        np.testing.assert_allclose(s.make_scan_array(-1.,-100.,3,'log'),[-1.,-10.,-100.])
+        np.testing.assert_allclose(s.generate_scan_array(ConfigObj({'q_min':'1','q_max':'4','q_number':'3'}),'q','log'),[1.,2.,4.])
+        for args in ((0.,1.,3,'log'),(-1.,1.,3,'log'),(0.,1.,3,'cubic')):
+            with self.subTest(args=args), self.assertRaises(ValueError):
+                s.make_scan_array(*args)
         config['q_number']='invalid'
         with self.assertRaises(ValueError):
             s.generate_scan_array(config,'q')
