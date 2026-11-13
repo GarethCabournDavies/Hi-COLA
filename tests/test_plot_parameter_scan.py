@@ -85,6 +85,26 @@ class ParameterScanTests(unittest.TestCase):
             self.assertEqual(run(self.root/'scans', '--out', self.root/'partial'), 0)
         self.assertTrue((self.root/'partial'/'parameter_scan.png').is_file())
 
+    def test_bins_follow_a_grid(self):
+        np.testing.assert_allclose(parameter_scan.bin_edges(np.array([0., 1., 2., 1.])), [-.5, .5, 1.5, 2.5])
+        self.assertEqual(len(parameter_scan.bin_edges(np.linspace(0, 1, 500))), parameter_scan.BINS+1)
+
+    def test_cells_tile_the_plane_and_show_the_most_viable_category(self):
+        import matplotlib
+        matplotlib.use('Agg')
+        from matplotlib import pyplot
+        tables = {'blacks': {'a': np.array([0., 1.]), 'b': np.array([0., 0.])},
+                  'greens': {'a': np.array([0., 2.]), 'b': np.array([0., 1.])}}
+        figure, axis = pyplot.subplots()
+        self.assertEqual(parameter_scan.draw_cells(axis, tables, 'a', 'b'), 4)
+        self.assertEqual(len(axis.patches), 4)
+        # The shared (0, 0) cell is drawn black first and green later, so green is on top
+        at_origin = [patch.get_facecolor()[:3] for patch in axis.patches
+                     if (patch.get_x(), patch.get_y()) == (-.5, -.5)]
+        self.assertEqual(at_origin, [(0., 0., 0.), matplotlib.colors.to_rgb('tab:green')])
+        self.assertEqual(axis.get_xlim(), (-.5, 2.5))
+        pyplot.close(figure)
+
     def test_axis_labels_are_typeset(self):
         self.assertEqual(parameter_scan.axis_label('g_31'), '$g_{31}$')
         self.assertEqual(parameter_scan.axis_label('k_1'), '$k_{1}$')

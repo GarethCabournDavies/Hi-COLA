@@ -10,10 +10,9 @@ import sys
 import numpy as np
 
 from HiCOLA.Plotting import common
-from HiCOLA.Plotting.parameter_scan import (add_scan_arguments, axis_label, check_quantities, load,
-                                            points, varying)
+from HiCOLA.Plotting.parameter_scan import (add_scan_arguments, axis_label, bin_edges, check_quantities,
+                                            draw_cells, load, points, varying)
 
-BINS = 20
 # A derived quantity replaces the scanned one it is computed from in the default selection
 DERIVED_FROM = {'E_dS': 'Hubble0', 'f_phi': 'Omega_l0'}
 
@@ -22,15 +21,6 @@ def default_quantities(tables):
     """Varying quantities, without scanned ones whose derived equivalent is also shown."""
     found = varying(tables)
     return [name for name in found if name not in {DERIVED_FROM[d] for d in DERIVED_FROM if d in found}]
-
-
-def bin_edges(values):
-    """Histogram edges: one bin per value for gridded quantities, otherwise BINS equal bins."""
-    unique = np.unique(values)
-    if 1 < len(unique) <= 2*BINS:
-        middles = (unique[1:]+unique[:-1])/2
-        return np.concatenate([[2*unique[0]-middles[0]], middles, [2*unique[-1]-middles[-1]]])
-    return np.histogram_bin_edges(values, bins=BINS)
 
 
 def main(argv=None):
@@ -71,11 +61,9 @@ def main(argv=None):
                                   color=[color for _, color, _ in found], histtype='stepfilled')
                     axis.set_yticks([])
                 else:
-                    for _, meaning, color, (xs, ys) in points(tables, names[column], names[row]):
-                        label = f'{meaning} ({len(xs)})' if (row, column) == (1, 0) else None
-                        axis.scatter(xs, ys, s=14, marker='s', color=color, lw=0, label=label)
-                        if (row, column) == (1, 0):
-                            total += len(xs)
+                    shown = draw_cells(axis, tables, names[column], names[row])
+                    if (row, column) == (1, 0):
+                        total = shown
                     axis.set_ylabel(axis_label(names[row]) if column == 0 else '')
                     if column:
                         axis.tick_params(labelleft=False)
@@ -85,7 +73,7 @@ def main(argv=None):
         # Share x limits down each column so the diagonal histograms line up with the scatter panels
         for column in range(count-1):
             axes[column][column].set_xlim(axes[count-1][column].get_xlim())
-        figure.legend(*axes[1][0].get_legend_handles_labels(), loc='upper right', title='Category', markerscale=2.5)
+        figure.legend(*axes[1][0].get_legend_handles_labels(), loc='upper right', title='Category')
         figure.suptitle(f'{args.label}: parameter scan ({total} points)')
         common.save(figure, args, 'parameter_scan_corner')
         plt.close(figure)
