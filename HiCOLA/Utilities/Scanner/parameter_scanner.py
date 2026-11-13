@@ -271,16 +271,16 @@ def main():
     horndeski_parameter_symbols = scan_settings_dict['symbol_list']
     for i in [path_to_txt_greens, path_to_txt_greys, path_to_txt_blacks, path_to_txt_magentas, 
               path_to_txt_pinks, path_to_txt_reds, path_to_txt_blues, path_to_txt_yellows]:
-        scan_file = open(i,"a")
-        spaces = '          '
-        print('# Hubble0'+spaces+'Scalar0'+spaces+'Scalarprime0'+spaces+'Omega_r0'+spaces+'Omega_m0'+spaces+'Omega_l0'+spaces+'fsolve_ier',end=spaces,file=scan_file)
-        for j in np.arange(number_of_horndeski_parameters):
-            print(horndeski_parameter_symbols[j],end=spaces, file=scan_file)
-        if 'red' in str(i.resolve()):
-            print('max[Omega_DE]', end=spaces, file=scan_file)
-        if 'pink' in str(i.resolve()):
-        	    print(f'max[Omega_DE(z>{early_DE_z})]', end=spaces, file=scan_file)
-        print('\n',file=scan_file)
+        with open(i,"a") as scan_file:
+            spaces = '          '
+            print('# Hubble0'+spaces+'Scalar0'+spaces+'Scalarprime0'+spaces+'Omega_r0'+spaces+'Omega_m0'+spaces+'Omega_l0'+spaces+'fsolve_ier',end=spaces,file=scan_file)
+            for j in np.arange(number_of_horndeski_parameters):
+                print(horndeski_parameter_symbols[j],end=spaces, file=scan_file)
+            if 'red' in str(i.resolve()):
+                print('max[Omega_DE]', end=spaces, file=scan_file)
+            if 'pink' in str(i.resolve()):
+                print(f'max[Omega_DE(z>{early_DE_z})]', end=spaces, file=scan_file)
+            print('\n',file=scan_file)
 
 
     ###Metadata file

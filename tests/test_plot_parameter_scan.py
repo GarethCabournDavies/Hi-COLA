@@ -77,6 +77,14 @@ class ParameterScanTests(unittest.TestCase):
         run(self.root/'scans', '--scan', '2026-01-01_10-00-00_test', '--out', self.root/'chosen')
         self.assertTrue((self.root/'chosen'/'parameter_scan.png').is_file())
 
+    def test_file_without_header_is_skipped(self):
+        # A scan stopped before its header writes were flushed leaves empty category files
+        (self.root/'scans'/'2026-01-01_10-00-00_test_blacks.txt').write_text('')
+        (self.root/'scans'/'2026-01-01_10-00-00_test_greens.txt').write_text('')
+        with self.assertLogs(level='WARNING'):
+            self.assertEqual(run(self.root/'scans', '--out', self.root/'partial'), 0)
+        self.assertTrue((self.root/'partial'/'parameter_scan.png').is_file())
+
     def test_axis_labels_are_typeset(self):
         self.assertEqual(parameter_scan.axis_label('g_31'), '$g_{31}$')
         self.assertEqual(parameter_scan.axis_label('k_1'), '$k_{1}$')

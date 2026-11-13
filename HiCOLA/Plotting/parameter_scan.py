@@ -63,6 +63,9 @@ def read_category(path):
             if line.startswith('[') and line.endswith(']'):
                 rows.append([float(value) for value in line[1:-1].split(',')])
     names = header.lstrip('#').split()
+    if not names:
+        logging.warning('Skipping %s: it has no column header', path)
+        return {}
     data = np.array(rows, dtype=float).reshape(-1, len(rows[0]) if rows else len(names))
     table = {name: data[:, column] for column, name in enumerate(names[:data.shape[1]])}
     if {'Hubble0', 'Omega_l0', 'Omega_m0', 'Omega_r0'} <= set(table):
@@ -74,7 +77,8 @@ def read_category(path):
 
 def candidates(tables):
     """Quantities that can be plotted, model parameters first, then derived and cosmological ones."""
-    names = list(next(iter(tables.values())))
+    # Column names from every category, since an unreadable file gives an empty table
+    names = list(dict.fromkeys(name for table in tables.values() for name in table))
     parameters = names[names.index('fsolve_ier')+1:] if 'fsolve_ier' in names else names
     found = [name for name in parameters if not name.startswith('max[') and name not in DERIVED]
     found += [*DERIVED, 'Omega_m0', 'Omega_r0', 'Omega_l0', 'Scalarprime0', 'Scalar0', 'Hubble0']
