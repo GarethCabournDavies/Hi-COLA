@@ -46,6 +46,15 @@ class ParameterScanCornerTests(unittest.TestCase):
         self.assertEqual(len(parameter_scan_corner.bin_edges(np.linspace(0, 1, 500))),
                          parameter_scan_corner.BINS+1)
 
+    def test_only_evenly_spaced_values_count_as_a_grid(self):
+        self.assertTrue(parameter_scan_corner.is_grid(np.linspace(0.8, 1.6, 12)))
+        self.assertTrue(parameter_scan_corner.is_grid(np.geomspace(1e-3, 1., 7)))
+        # E_dS from a linear Hubble0 scan, with grid points missing
+        self.assertTrue(parameter_scan_corner.is_grid(1/np.linspace(0.8, 1.6, 12)[[0, 1, 4, 5, 9]][::-1]))
+        self.assertFalse(parameter_scan_corner.is_grid(np.array([1.31, 1.32, 1.36, 1.45, 1.53, 1.8])))
+        self.assertEqual(len(parameter_scan_corner.bin_edges(np.array([1.31, 1.32, 1.36, 1.45, 1.53, 1.8]))),
+                         parameter_scan_corner.BINS+1)
+
     def test_figure_with_default_and_chosen_quantities(self):
         self.assertEqual(run(self.root/'scans'), 0)
         self.assertTrue((self.root/'scans'/'plots'/'parameter_scan_corner.png').read_bytes().startswith(b'\x89PNG'))

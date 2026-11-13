@@ -158,7 +158,7 @@ def main(argv=None):
         total = 0
         for _, meaning, color, (xs, ys) in points(tables, x, y):
             total += len(xs)
-            axis.scatter(xs, ys, s=45, marker='s', color=color, label=f'{meaning} ({len(xs)})', lw=0)
+            axis.scatter(xs, ys, s=30, color=color, label=f'{meaning} ({len(xs)})', lw=0)
         axis.set(xlabel=axis_label(x), ylabel=axis_label(y), title=f'{args.label}: parameter scan ({total} points)')
         axis.legend(loc='upper left', bbox_to_anchor=(1.01, 1), title='Category')
         common.save(figure, args, 'parameter_scan')

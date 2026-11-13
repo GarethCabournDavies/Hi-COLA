@@ -24,10 +24,33 @@ def default_quantities(tables):
     return [name for name in found if name not in {DERIVED_FROM[d] for d in DERIVED_FROM if d in found}]
 
 
+def is_grid(unique):
+    """True for sorted values from an evenly spaced grid, with at most half of its points missing.
+
+    The scanner spaces its arrays evenly in value or in log, and E_dS is the reciprocal of
+    a scanned Hubble0, so each of those three transforms is tried.
+    """
+    if len(unique) < 2 or len(unique) > 2*BINS:
+        return False
+    if len(unique) == 2:
+        return True
+    transforms = [unique]
+    if np.all(unique > 0) or np.all(unique < 0):
+        transforms += [np.log(np.abs(unique)), 1/unique]
+    for values in transforms:
+        steps = np.abs(np.diff(values))
+        multiples = steps/steps.min()
+        # Grid slots spanned; few missing points are allowed, but not a sparse pick from a fine grid
+        slots = np.round(multiples).sum()+1
+        if np.allclose(multiples, np.round(multiples), rtol=0, atol=1e-6) and slots <= min(2*len(unique), 2*BINS):
+            return True
+    return False
+
+
 def bin_edges(values):
     """Histogram edges: one bin per value for gridded quantities, otherwise BINS equal bins."""
     unique = np.unique(values)
-    if 1 < len(unique) <= 2*BINS:
+    if is_grid(unique):
         middles = (unique[1:]+unique[:-1])/2
         return np.concatenate([[2*unique[0]-middles[0]], middles, [2*unique[-1]-middles[-1]]])
     return np.histogram_bin_edges(values, bins=BINS)
@@ -73,7 +96,7 @@ def main(argv=None):
                 else:
                     for _, meaning, color, (xs, ys) in points(tables, names[column], names[row]):
                         label = f'{meaning} ({len(xs)})' if (row, column) == (1, 0) else None
-                        axis.scatter(xs, ys, s=14, marker='s', color=color, lw=0, label=label)
+                        axis.scatter(xs, ys, s=10, color=color, lw=0, label=label)
                         if (row, column) == (1, 0):
                             total += len(xs)
                     axis.set_ylabel(axis_label(names[row]) if column == 0 else '')
