@@ -10,8 +10,8 @@ import sys
 import numpy as np
 
 from HiCOLA.Plotting import common
-from HiCOLA.Plotting.parameter_scan import (add_scan_arguments, axis_label, check_quantities, load,
-                                            points, varying)
+from HiCOLA.Plotting.parameter_scan import (ALPHA, add_scan_arguments, axis_label, check_quantities, load,
+                                            opaque_legend, points, varying)
 
 BINS = 20
 # A derived quantity replaces the scanned one it is computed from in the default selection
@@ -96,7 +96,7 @@ def main(argv=None):
                 else:
                     for _, meaning, color, (xs, ys) in points(tables, names[column], names[row]):
                         label = f'{meaning} ({len(xs)})' if (row, column) == (1, 0) else None
-                        axis.scatter(xs, ys, s=10, color=color, lw=0, label=label)
+                        axis.scatter(xs, ys, s=20, color=color, alpha=ALPHA, lw=0, label=label)
                         if (row, column) == (1, 0):
                             total += len(xs)
                     axis.set_ylabel(axis_label(names[row]) if column == 0 else '')
@@ -108,7 +108,8 @@ def main(argv=None):
         # Share x limits down each column so the diagonal histograms line up with the scatter panels
         for column in range(count-1):
             axes[column][column].set_xlim(axes[count-1][column].get_xlim())
-        figure.legend(*axes[1][0].get_legend_handles_labels(), loc='upper right', title='Category', markerscale=2.5)
+        opaque_legend(figure.legend(*axes[1][0].get_legend_handles_labels(), loc='upper right', title='Category',
+                                    markerscale=2))
         figure.suptitle(f'{args.label}: parameter scan ({total} points)')
         common.save(figure, args, 'parameter_scan_corner')
         plt.close(figure)

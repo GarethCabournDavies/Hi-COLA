@@ -30,6 +30,8 @@ FILE = re.compile(r'^(?P<scan>.+)_(?P<category>' + '|'.join(CATEGORIES) + r')\.t
 # numpy 2 writes values as np.float64(...) inside the scanner's list reprs.
 WRAPPED = re.compile(r'np\.\w+\(([^()]*)\)')
 DERIVED = ('E_dS', 'f_phi')
+# Opacity of scan points, so points projected onto the same place blend
+ALPHA = 0.5
 LABELS = {'E_dS': '$E_{\\rm dS}$', 'f_phi': '$f_\\phi$', 'Hubble0': '$H_0$ (code units)',
           'Scalar0': '$\\phi_0$', 'Scalarprime0': "$\\phi'_0$", 'Omega_r0': '$\\Omega_{r0}$',
           'Omega_m0': '$\\Omega_{m0}$', 'Omega_l0': '$\\Omega_{\\Lambda 0}$'}
@@ -142,6 +144,13 @@ def points(tables, *names):
             yield category, meaning, color, [table[name] for name in names]
 
 
+def opaque_legend(legend):
+    """Show legend markers at full opacity, so they match the category colours."""
+    for handle in legend.legend_handles:
+        handle.set_alpha(1)
+    return legend
+
+
 def main(argv=None):
     tool = common.parser(__doc__.splitlines()[0], 'Scanner output folder containing <scan>_<category>s.txt files')
     add_scan_arguments(tool)
@@ -158,9 +167,9 @@ def main(argv=None):
         total = 0
         for _, meaning, color, (xs, ys) in points(tables, x, y):
             total += len(xs)
-            axis.scatter(xs, ys, s=30, color=color, label=f'{meaning} ({len(xs)})', lw=0)
+            axis.scatter(xs, ys, s=45, color=color, alpha=ALPHA, label=f'{meaning} ({len(xs)})', lw=0)
         axis.set(xlabel=axis_label(x), ylabel=axis_label(y), title=f'{args.label}: parameter scan ({total} points)')
-        axis.legend(loc='upper left', bbox_to_anchor=(1.01, 1), title='Category')
+        opaque_legend(axis.legend(loc='upper left', bbox_to_anchor=(1.01, 1), title='Category'))
         common.save(figure, args, 'parameter_scan')
         plt.close(figure)
     return 0
