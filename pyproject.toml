@@ -21,6 +21,7 @@ hicola_plot_background = "HiCOLA.Plotting.background:main"
 hicola_plot_growth = "HiCOLA.Plotting.growth:main"
 hicola_plot_frontend = "HiCOLA.Plotting.frontend:main"
 hicola_plot_parameter_scan = "HiCOLA.Plotting.parameter_scan:main"
+hicola_plot_parameter_scan_corner = "HiCOLA.Plotting.parameter_scan_corner:main"
 
 [project.optional-dependencies]
 tests = [
