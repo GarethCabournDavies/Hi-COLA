@@ -40,6 +40,12 @@ class ParameterScanCornerTests(unittest.TestCase):
         self.assertIn('E_dS', names)
         self.assertNotIn('Hubble0', names)
 
+    def test_bins_follow_a_grid(self):
+        np.testing.assert_allclose(parameter_scan_corner.bin_edges(np.array([0., 1., 2., 1.])),
+                                   [-.5, .5, 1.5, 2.5])
+        self.assertEqual(len(parameter_scan_corner.bin_edges(np.linspace(0, 1, 500))),
+                         parameter_scan_corner.BINS+1)
+
     def test_figure_with_default_and_chosen_quantities(self):
         self.assertEqual(run(self.root/'scans'), 0)
         self.assertTrue((self.root/'scans'/'plots'/'parameter_scan_corner.png').read_bytes().startswith(b'\x89PNG'))

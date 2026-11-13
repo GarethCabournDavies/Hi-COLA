@@ -30,8 +30,6 @@ FILE = re.compile(r'^(?P<scan>.+)_(?P<category>' + '|'.join(CATEGORIES) + r')\.t
 # numpy 2 writes values as np.float64(...) inside the scanner's list reprs.
 WRAPPED = re.compile(r'np\.\w+\(([^()]*)\)')
 DERIVED = ('E_dS', 'f_phi')
-# Bins per axis for quantities that are not on a regular grid
-BINS = 20
 LABELS = {'E_dS': '$E_{\\rm dS}$', 'f_phi': '$f_\\phi$', 'Hubble0': '$H_0$ (code units)',
           'Scalar0': '$\\phi_0$', 'Scalarprime0': "$\\phi'_0$", 'Omega_r0': '$\\Omega_{r0}$',
           'Omega_m0': '$\\Omega_{m0}$', 'Omega_l0': '$\\Omega_{\\Lambda 0}$'}
@@ -144,44 +142,6 @@ def points(tables, *names):
             yield category, meaning, color, [table[name] for name in names]
 
 
-def bin_edges(values):
-    """Histogram edges: one bin per value for gridded quantities, otherwise BINS equal bins."""
-    unique = np.unique(values)
-    if 1 < len(unique) <= 2*BINS:
-        middles = (unique[1:]+unique[:-1])/2
-        return np.concatenate([[2*unique[0]-middles[0]], middles, [2*unique[-1]-middles[-1]]])
-    return np.histogram_bin_edges(values, bins=BINS)
-
-
-def draw_cells(axis, tables, x, y):
-    """Fill the (x, y) cell of every scanned point with its category colour; return the point count.
-
-    Cells come from bin_edges on each axis, so they tile the plane. Categories are drawn in
-    CATEGORIES order, so a cell holding several points (for example a projection of a
-    higher-dimensional scan) shows the most viable outcome among them.
-    """
-    found = list(points(tables, x, y))
-    xs_all = np.concatenate([xs for *_, (xs, _) in found]) if found else np.array([])
-    ys_all = np.concatenate([ys for *_, (_, ys) in found]) if found else np.array([])
-    keep = np.isfinite(xs_all) & np.isfinite(ys_all)
-    if not keep.any():
-        return 0
-    x_edges, y_edges = bin_edges(xs_all[keep]), bin_edges(ys_all[keep])
-    total = 0
-    for _, meaning, color, (xs, ys) in found:
-        total += len(xs)
-        finite = np.isfinite(xs) & np.isfinite(ys)
-        # Cell index of each point; the last edge belongs to the last cell
-        columns = np.clip(np.searchsorted(x_edges, xs[finite], side='right')-1, 0, len(x_edges)-2)
-        rows = np.clip(np.searchsorted(y_edges, ys[finite], side='right')-1, 0, len(y_edges)-2)
-        cells = np.unique(np.stack([columns, rows], axis=1), axis=0) if finite.any() else np.empty((0, 2), int)
-        logging.debug('%s: %d points in %d cells of %s-%s', meaning, len(xs), len(cells), x, y)
-        axis.bar(x_edges[cells[:, 0]], np.diff(y_edges)[cells[:, 1]], width=np.diff(x_edges)[cells[:, 0]],
-                 bottom=y_edges[cells[:, 1]], align='edge', color=color, lw=0, label=f'{meaning} ({len(xs)})')
-    axis.set(xlim=(x_edges[0], x_edges[-1]), ylim=(y_edges[0], y_edges[-1]))
-    return total
-
-
 def main(argv=None):
     tool = common.parser(__doc__.splitlines()[0], 'Scanner output folder containing <scan>_<category>s.txt files')
     add_scan_arguments(tool)
@@ -195,7 +155,10 @@ def main(argv=None):
 
     with common.style() as plt:
         figure, axis = plt.subplots(figsize=(9, 5.5))
-        total = draw_cells(axis, tables, x, y)
+        total = 0
+        for _, meaning, color, (xs, ys) in points(tables, x, y):
+            total += len(xs)
+            axis.scatter(xs, ys, s=45, marker='s', color=color, label=f'{meaning} ({len(xs)})', lw=0)
         axis.set(xlabel=axis_label(x), ylabel=axis_label(y), title=f'{args.label}: parameter scan ({total} points)')
         axis.legend(loc='upper left', bbox_to_anchor=(1.01, 1), title='Category')
         common.save(figure, args, 'parameter_scan')
