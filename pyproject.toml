@@ -7,7 +7,16 @@ name = "hicola-frontend"
 license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 dynamic = ["version"]
-requires-python = ">=3.10,<3.13"
+# Minimum installable version. Supported versions are the classifiers below,
+# which match the required versions in .github/ci-matrix.json.
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 dependencies = [
     "numpy>=1.26",
     "scipy>=1.11",
