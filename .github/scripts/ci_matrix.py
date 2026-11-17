@@ -13,9 +13,6 @@ from pathlib import Path
 
 CONFIG = Path(__file__).resolve().parents[1] / 'ci-matrix.json'
 
-# setup-python publishes Python 3.9 for Ubuntu 24.04 but not later images.
-RUNNER_OVERRIDES = {('ubuntu-latest', '3.9'): 'ubuntu-24.04'}
-
 
 def entries(values):
     """Return (value, required) pairs, required values first."""
@@ -39,7 +36,6 @@ def build_matrix(config, os_mode):
         for version, py_required in entries(config['python']):
             include.append({
                 'os': os_name,
-                'runner': RUNNER_OVERRIDES.get((os_name, version), os_name),
                 'python-version': version,
                 'required': os_required and py_required,
                 'primary': not include,

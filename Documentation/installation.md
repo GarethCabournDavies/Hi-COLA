@@ -7,7 +7,7 @@ Hi-COLA is imported in Python as `HiCOLA` and is published under two package nam
 | `python -m pip install hicola-frontend` | Python frontend and [plotting tools](outputs.md#plotting-tools). No N-body solver. |
 | `conda install -c conda-forge hi-cola` | The above plus the compiled COLASolver, ready to [run from Python](backend.md#run-the-simulation). |
 
-pip supports Python 3.9 to 3.12 and installs NumPy, SciPy, SymPy, Matplotlib, ConfigObj, and pandas. Conda packages are built for Linux, macOS, and Windows. Development builds of the default branch are on a test label: `conda install -c ACCOUNT/label/test -c conda-forge hi-cola`, with `ACCOUNT` the repository's Anaconda.org account.
+pip supports Python 3.10 to 3.12 and installs NumPy, SciPy, SymPy, Matplotlib, ConfigObj, and pandas. Conda packages are built for Linux, macOS, and Windows. Development builds of the default branch are on a test label: `conda install -c ACCOUNT/label/test -c conda-forge hi-cola`, with `ACCOUNT` the repository's Anaconda.org account.
 
 Check the installation:
 

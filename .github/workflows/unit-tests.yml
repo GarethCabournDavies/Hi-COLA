@@ -26,7 +26,7 @@ jobs:
   unit-tests:
     name: Unit tests (Python ${{ matrix.python-version }})
     needs: matrix
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     # Optional versions report failures without failing the gate.
     continue-on-error: ${{ !matrix.required }}

@@ -201,7 +201,7 @@ jobs:
   test-matrix:
     name: Verify wheel and source archive (${{ matrix.os }}, ${{ matrix.python-version }})
     needs: [matrix, build]
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     # Optional entries report failures without failing the gate.
     continue-on-error: ${{ !matrix.required }}

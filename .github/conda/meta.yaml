@@ -23,7 +23,7 @@ requirements:
     - cmake >=3.18
     - ninja
   host:
-    - python >=3.9,<3.13
+    - python >=3.10,<3.13
     - pip
     - setuptools >=77
     - wheel
@@ -32,7 +32,7 @@ requirements:
     - gsl
     - lua
   run:
-    - python >=3.9,<3.13
+    - python >=3.10,<3.13
     - numpy
     - scipy
     - sympy

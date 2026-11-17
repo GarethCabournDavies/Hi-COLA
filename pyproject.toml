@@ -7,7 +7,7 @@ name = "hicola-frontend"
 license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 dynamic = ["version"]
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.10,<3.13"
 dependencies = [
     "numpy>=1.26",
     "scipy>=1.11",
